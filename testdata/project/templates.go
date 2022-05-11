@@ -5,7 +5,6 @@ var t = `
 {{.T.Get "Hello"}}
 `
 
-
 // xspreak: template
 const constTemplate = `
 

@@ -220,6 +220,47 @@ import "github.com/vorlif/spreak/localize"
 const MagicName localize.Singular = ".%$($§($(%"
 ```
 
+### Templates (Experimental)
+
+With `-t` a template directory can be specified.
+
+* `-t "path/to/templates/*.html"`: Scans all HTML files in the `templates` directory
+* `-t "path/to/templates/**/*.html"` Scans all HTML files in the `templates` directory 
+and in subdirectories of the templates directory.
+
+With `--template-prefix` you can specify a prefix for the template function.
+
+For example, with `--template-prefix ".T"` the following function calls are extracted
+
+```text
+{{.T.Get "Hello world"}}
+{{.T.NGet "I see a planet" "I see planets" 2}}
+```
+
+Two messages are extracted here:
+* Message 1
+  * Singular `Hello world`
+* Message 2
+  * Singular `I see a planet`
+  * Plural `I see planets`
+
+Instead of `--template-prefix` you can also use `-k` to define your own keywords. 
+The definition follows the [xgettext notation](https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html), 
+but only applies to templates.
+
+The default is: `.T.Get .T.Getf .T.DGet:1d,2 .T.DGetf:1d,2 .T.NGet:1,2 .T.NGetf:1,2 .T.DNGet:1d,2,3 .T.DNGetf:1d,2,3 
+.T.PGet:1c,2 .T.PGetf:1c,2 .T.DPGet:1d,2c,3 .T.DPGetf:1d,2c,3 .T.NPGet:1c,2,3 .T.NPGetf:1c,2,3 .T.DNPGet:1d,2c,3,4
+.T.DNPGetf:1d,2c,3,4`
+
+Inline templates must be marked with `xspreak: template`:
+
+```go
+package main
+
+// xspreak: template
+const tmpl = `{{.T.Get "Hello"}}`
+```
+
 ## Roadmap
 
 * [ ] Map initialization
