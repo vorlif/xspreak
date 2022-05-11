@@ -1,0 +1,23 @@
+{{.T.Get "Get-Singular"}}
+{{.T.Getf "Getf-Singular"}}
+
+{{.T.NGet "NGet-Singular" "NGet-Plural"}}
+{{.T.NGetf "NGetf-Singular" "NGetf-Plural"}}
+
+{{.T.DGet "DGet-Domain" "DGet-Singular" }}
+{{.T.DGetf "DGetf-Domain" "DGetf-Singular" }}
+
+{{ .T.DNGet "DNGet-Domain" "DNGet-Singular" "DNGet-Plural" }}
+{{ .T.DNGetf "DNGetf-Domain" "DNGetf-Singular" "DNGetf-Plural" }}
+
+{{ .T.PGet "PGet-Context" "PGet-Singular" }}
+{{ .T.PGetf "PGetf-Context" "PGetf-Singular" }}
+
+{{ .T.DPGet "DPGet-Domain" "DPGet-Context" "DPGet-Singular" }}
+{{ .T.DPGetf "DPGetf-Domain" "DPGetf-Context" "DPGetf-Singular" }}
+
+{{ .T.NPGet "NPGet-Context" "NPGet-Singular" "NPGet-Plural" }}
+{{ .T.NPGetf "NPGetf-Context" "NPGetf-Singular" "NPGetf-Plural" }}
+
+{{ .T.DNPGet "DNPGet-Context" "DNPGet-Context" "DNPGet-Singular" "DNPGet-Plural" }}
+{{ .T.DNPGetf "DNPGetf-Context" "DNPGetf-Context" "DNPGetf-Singular" "DNPGetf-Plural" }}
