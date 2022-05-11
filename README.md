@@ -46,7 +46,7 @@ func main() {
 ## How to install
 
 ```bash
-go install github.com/vorlif/xspreak@main
+go install github.com/vorlif/xspreak@v0.2.0
 xspreak -help
 ```
 
