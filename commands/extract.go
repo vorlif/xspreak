@@ -94,6 +94,7 @@ func (e *Executor) runExtraction(ctx context.Context, args []string) ([]result.I
 		goextractors.NewStructDefExtractor(),
 		goextractors.NewVariablesExtractor(),
 		goextractors.NewErrorExtractor(),
+		tmplextractors.NewInlineTemplateExtractor(),
 		tmplextractors.NewCommandExtractor(),
 	}
 
