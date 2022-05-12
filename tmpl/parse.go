@@ -2,6 +2,7 @@ package tmpl
 
 import (
 	"bytes"
+	"go/token"
 	"io"
 	"os"
 	"text/template/parse"
@@ -11,6 +12,8 @@ type Template struct {
 	File      string
 	Trees     map[string]*parse.Tree
 	Inspector *Inspector
+
+	GoFilePos token.Position // For inline templates
 
 	r io.ReadSeeker
 }
@@ -31,13 +34,10 @@ func ParseString(name, content string) (*Template, error) {
 func ParseBytes(name string, src []byte) (*Template, error) {
 	t := &Template{
 		File:      name,
-		r:         nil,
+		r:         bytes.NewReader(src),
 		Trees:     make(map[string]*parse.Tree),
 		Inspector: nil,
 	}
-
-	t.r = bytes.NewReader(src)
-	t.Trees = make(map[string]*parse.Tree)
 
 	tree := &parse.Tree{
 		Name: name,

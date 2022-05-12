@@ -2,6 +2,7 @@ package processors
 
 import (
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
 )
+
+// Recognizes not all cases, but most. - See Unit tests.
+var reGoStringFormat = regexp.MustCompile(`%([#+\-*0.])?(\[\d])?(([1-9])\.([1-9])|([1-9])|([1-9])\.|\.([1-9]))?[xsvTtbcdoOqXUeEfFgGp]`)
 
 type translationBuilder struct {
 	cfg *config.Config
@@ -34,26 +38,26 @@ func (s translationBuilder) Process(inIssues []result.Issue) ([]result.Issue, er
 	}
 
 	for _, iss := range inIssues {
-		var codeReferences []*po.Reference
-		if !s.cfg.WriteNoLocation {
-			path, errP := filepath.Rel(absOut, iss.Pos.Filename)
-			if errP != nil {
-				logrus.WithError(errP).Warn("Relative path could not be created")
-				path = iss.Pos.Filename
-			}
+		path, errP := filepath.Rel(absOut, iss.Pos.Filename)
+		if errP != nil {
+			logrus.WithError(errP).Warn("Relative path could not be created, use absolute")
+			path = iss.Pos.Filename
+		}
 
-			ref := &po.Reference{
-				Path:   path,
-				Line:   iss.Pos.Line,
-				Column: iss.Pos.Column,
-			}
-			codeReferences = append(codeReferences, ref)
+		ref := &po.Reference{
+			Path:   filepath.ToSlash(path),
+			Line:   iss.Pos.Line,
+			Column: iss.Pos.Column,
+		}
+
+		if reGoStringFormat.MatchString(iss.MsgID) || reGoStringFormat.MatchString(iss.PluralID) {
+			iss.Flags = append(iss.Flags, "go-format")
 		}
 
 		iss.Message = &po.Message{
 			Comment: &po.Comment{
 				Extracted:  strings.Join(iss.Comment, "\n"),
-				References: codeReferences,
+				References: []*po.Reference{ref},
 				Flags:      iss.Flags,
 			},
 			Context:  iss.Context,

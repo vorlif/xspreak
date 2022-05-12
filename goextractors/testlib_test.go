@@ -33,6 +33,7 @@ func runExtraction(t *testing.T, dir string, testExtractors ...extractors.Extrac
 	cfg := config.NewDefault()
 	cfg.SourceDir = dir
 	cfg.ExtractErrors = true
+	require.NoError(t, cfg.Prepare())
 	ctx := context.Background()
 	contextLoader := extract.NewContextLoader(cfg)
 

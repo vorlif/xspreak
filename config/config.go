@@ -110,7 +110,7 @@ func (c *Config) Prepare() error {
 		c.WrapWidth = -1
 	}
 
-	if c.Keywords == nil {
+	if len(c.TemplatePatterns) > 0 && len(c.Keywords) == 0 {
 		c.Keywords = tmpl.DefaultKeywords(".T")
 	}
 

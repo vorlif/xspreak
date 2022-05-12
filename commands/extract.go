@@ -91,10 +91,11 @@ func (e *Executor) runExtraction(ctx context.Context, args []string) ([]result.I
 		goextractors.NewFuncCallExtractor(),
 		goextractors.NewGlobalAssignExtractor(),
 		goextractors.NewSliceDefExtractor(),
+		goextractors.NewMapsDefExtractor(),
 		goextractors.NewStructDefExtractor(),
 		goextractors.NewVariablesExtractor(),
 		goextractors.NewErrorExtractor(),
-		tmplextractors.NewInlineTemplateExtractor(),
+		goextractors.NewInlineTemplateExtractor(),
 		tmplextractors.NewCommandExtractor(),
 	}
 

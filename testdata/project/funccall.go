@@ -14,6 +14,10 @@ func noop(sing alias.MsgID, plural alias.Plural, context alias.Context, domain a
 
 }
 
+func GenericFunc[V int64 | float64](log alias.Singular, i V) V {
+	return i
+}
+
 func outerFuncDef() {
 	f := func(msgid alias.Singular, plural alias.Plural, context alias.Context, domain alias.Domain) {
 
@@ -25,6 +29,7 @@ func outerFuncDef() {
 	// extracted
 	noop("noop-msgid", "noop-plural", "noop-context", "noop-domain")
 	sub.Func("submsgid", "subplural")
+	_ = GenericFunc[int64]("generic-call", 5)
 }
 
 // TRANSLATORS: this is not extracted

@@ -98,20 +98,49 @@ func (c *Context) GetLocalizeTypeToken(expr ast.Expr) TypeToken {
 	}
 }
 
-func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
-	switch ident := start.(type) {
+func (c *Context) SearchIdent(start ast.Node) *ast.Ident {
+	switch v := start.(type) {
 	case *ast.Ident:
-		if tok := c.GetLocalizeTypeToken(ident); tok != TypeNone {
-			return tok, ident
+		pkg, _ := c.GetType(v)
+		if pkg != nil {
+			return v
+		}
+	case *ast.SelectorExpr:
+		pkg, _ := c.GetType(v.Sel)
+		if pkg != nil {
+			return v.Sel
 		}
 
-		pkg, obj := c.GetType(ident)
+		return c.SearchIdent(v.X)
+	case *ast.StarExpr:
+		return c.SearchIdent(v.X)
+	}
+
+	return nil
+}
+
+func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
+	switch val := start.(type) {
+	case *ast.Ident:
+		if tok := c.GetLocalizeTypeToken(val); tok != TypeNone {
+			return tok, val
+		}
+
+		pkg, obj := c.GetType(val)
 		if pkg == nil {
 			break
 		}
 
 		if def := c.Definitions.Get(objToKey(obj), ""); def != nil {
-			return def.Token, ident
+			return def.Token, val
+		}
+	case *ast.StarExpr:
+		tok, ident := c.SearchIdentAndToken(val.X)
+		if ident != nil {
+			pkg, _ := c.GetType(ident)
+			if pkg != nil {
+				return tok, ident
+			}
 		}
 	}
 

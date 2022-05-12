@@ -23,6 +23,7 @@ func TestFuncCallExtractor(t *testing.T) {
 		"domain-dp", "context-dp", "singular-dp",
 		"domain-dnp", "context-dnp", "msgid-dnp", "pluralid-dnp",
 		"submsgid", "subplural", "foo test",
+		"generic-call",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)

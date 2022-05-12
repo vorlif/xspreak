@@ -32,7 +32,8 @@ func NewRunner(cfg *config.Config, pkgs map[string]*packages.Package) (*Runner, 
 	p = append(p,
 		processors.NewCommentCleaner(cfg),
 		processors.NewSkipIgnore(),
-		processors.BuildTranslations(cfg))
+		processors.BuildTranslations(cfg),
+	)
 
 	ret := &Runner{
 		Processors: p,

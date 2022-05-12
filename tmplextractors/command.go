@@ -2,7 +2,6 @@ package tmplextractors
 
 import (
 	"context"
-	"go/token"
 	"strings"
 	"text/template/parse"
 
@@ -21,6 +20,11 @@ func NewCommandExtractor() extractors.Extractor {
 
 func (c *commandExtractor) Run(ctx context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	var issues []result.Issue
+	if len(extractCtx.Config.Keywords) == 0 {
+		log.Debug("Skip template extraction, no keywords present")
+		return issues, nil
+	}
+
 	for _, template := range extractCtx.Templates {
 		template.Inspector.WithStack([]parse.Node{&parse.PipeNode{}}, func(n parse.Node, push bool, stack []parse.Node) (proceed bool) {
 			proceed = true
@@ -35,10 +39,12 @@ func (c *commandExtractor) Run(ctx context.Context, extractCtx *extractors.Conte
 			for _, cmd := range pipe.Cmds {
 				iss := extractIssue(cmd, extractCtx)
 				if iss != nil {
-					iss.Pos = token.Position{
-						Filename: template.File,
-						Offset:   int(cmd.Pos),
+					iss.Pos = template.GoFilePos
+					if iss.Pos.Filename == "" {
+						iss.Pos.Filename = template.File
+						iss.Pos.Offset = int(cmd.Pos)
 					}
+					iss.Flags = append(iss.Flags, "go-template")
 					issues = append(issues, *iss)
 				}
 			}

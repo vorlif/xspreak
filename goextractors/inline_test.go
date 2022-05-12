@@ -1,4 +1,4 @@
-package tmplextractors
+package goextractors
 
 import (
 	"context"
@@ -10,15 +10,13 @@ import (
 	"github.com/vorlif/xspreak/config"
 	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/extract/extractors"
-	"github.com/vorlif/xspreak/goextractors"
 )
 
 func TestInlineExtraction(t *testing.T) {
 	cfg := config.NewDefault()
 	cfg.SourceDir = testdataDir
-	cfg.ExtractErrors = false
+	cfg.ExtractErrors = true
 	require.NoError(t, cfg.Prepare())
-
 	ctx := context.Background()
 	contextLoader := extract.NewContextLoader(cfg)
 
@@ -28,21 +26,10 @@ func TestInlineExtraction(t *testing.T) {
 	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
 	require.NoError(t, err)
 
-	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{
-		goextractors.NewCommentsExtractor(),
-		NewInlineTemplateExtractor(),
-		NewCommandExtractor(),
-	})
+	e := []extractors.Extractor{NewCommentsExtractor(), NewInlineTemplateExtractor()}
+	issues, err := runner.Run(ctx, extractCtx, e)
 	require.NoError(t, err)
+	assert.Empty(t, issues)
 
-	want := []string{
-		"Hello",
-
-		"Dog", "Dogs",
-
-		"Multiline String\nwith\n  newlines",
-	}
-	got := collectIssueStrings(issues)
-	assert.ElementsMatch(t, want, got)
-
+	assert.Equal(t, 3, len(extractCtx.Templates))
 }

@@ -1,4 +1,4 @@
-package tmplextractors
+package goextractors
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func NewInlineTemplateExtractor() extractors.Extractor {
 	return &inlineTemplateExtractor{}
 }
 
-func (i *inlineTemplateExtractor) Run(ctx context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
+func (i *inlineTemplateExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	util.TrackTime(time.Now(), "extract inline templates")
 
 	extractCtx.Inspector.WithStack([]ast.Node{&ast.BasicLit{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
@@ -74,6 +74,7 @@ func (i *inlineTemplateExtractor) Run(ctx context.Context, extractCtx *extractor
 						log.WithError(errP).WithField("pos", pos).Warn("Template could not be parsed")
 						break
 					}
+					template.GoFilePos = pos
 					extractCtx.Templates = append(extractCtx.Templates, template)
 				}
 			}

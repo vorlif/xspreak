@@ -50,18 +50,18 @@ func NewExecutor() *Executor {
 		}
 	}
 
+	if keywordPrefix, errP := fs.GetString("template-prefix"); errP != nil {
+		logrus.WithError(errP).Fatal("Args could not be parsed")
+	} else {
+		e.cfg.Keywords = tmpl.DefaultKeywords(keywordPrefix)
+	}
+
 	if rawKeywords, err := fs.GetStringArray("template-keyword"); err != nil {
 		logrus.WithError(err).Fatal("Args could not be parsed")
-	} else if len(rawKeywords) == 0 {
-		if keywordPrefix, errP := fs.GetString("template-prefix"); errP != nil {
-			logrus.WithError(errP).Fatal("Args could not be parsed")
-		} else {
-			e.cfg.Keywords = tmpl.DefaultKeywords(keywordPrefix)
-		}
 	} else {
 		for _, raw := range rawKeywords {
 			if kw, errKw := tmpl.ParseKeywords(raw); errKw != nil {
-				logrus.WithError(errKw).Fatal("Args could not be parsed")
+				logrus.WithError(errKw).Fatalf("Arg could not be parsed %s", raw)
 			} else {
 				e.cfg.Keywords = append(e.cfg.Keywords, kw)
 			}

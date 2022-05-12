@@ -32,14 +32,22 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		}
 
 		var ident *ast.Ident
-		if selector := searchSelector(node.Fun); selector != nil {
-			ident = selector.Sel
-		} else {
-			idt, ok := node.Fun.(*ast.Ident)
-			if !ok {
+		switch fun := node.Fun.(type) {
+		case *ast.Ident:
+			ident = fun
+		case *ast.IndexExpr:
+			switch x := fun.X.(type) {
+			case *ast.Ident:
+				ident = x
+			}
+		}
+
+		if ident == nil {
+			if selector := searchSelector(node.Fun); selector != nil {
+				ident = selector.Sel
+			} else {
 				return
 			}
-			ident = idt
 		}
 
 		pkg, obj := extractCtx.GetType(ident)
