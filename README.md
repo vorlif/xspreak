@@ -48,8 +48,8 @@ func main() {
 ## How to install
 
 ```bash
-go install github.com/vorlif/xspreak@v0.2.1
-xspreak -help
+go install github.com/vorlif/xspreak@v0.3.0
+xspreak --help
 ```
 
 ## What can be extracted?
