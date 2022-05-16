@@ -1,3 +1,3 @@
 package commands
 
-const VersionName = "0.2.0"
+const VersionName = "0.3.0"

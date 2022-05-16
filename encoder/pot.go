@@ -23,18 +23,15 @@ type potEncoder struct {
 func NewPotEncoder(cfg *config.Config, w io.Writer) Encoder {
 	enc := po.NewEncoder(w)
 	enc.SetWrapWidth(cfg.WrapWidth)
+	enc.SetWriteHeader(!cfg.OmitHeader)
+	enc.SetWriteReferences(!cfg.WriteNoLocation)
+
 	return &potEncoder{cfg: cfg, w: enc}
 }
 
 func (e *potEncoder) Encode(issues []result.Issue) error {
-	var header *po.Header
-
-	if !e.cfg.OmitHeader {
-		header = e.buildHeader()
-	}
-
 	file := &po.File{
-		Header:   header,
+		Header:   e.buildHeader(),
 		Messages: make(map[string]map[string]*po.Message),
 	}
 

@@ -1,4 +1,6 @@
-# xspreak
+xspreak is the command line program for extracting strings for the [spreak library](https://github.com/vorlif/spreak).
+
+# xspreak [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 xspreak automatically extracts strings that use a string alias from the localize package.
 The extracted strings are stored in a `.pot` file and can then be easily translated.
@@ -177,6 +179,28 @@ func main() {
 }
 ```
 
+### Values from an map initialization
+
+During map initialization keys and values are extracted,
+if the type is localize.Singular or a struct that contains parameter types from the localize package.
+
+```go
+package main
+
+import "github.com/vorlif/spreak/localize"
+
+var weekdays = map[localize.MsgID]int {
+	"Monday": 1,
+	"Tuesday": 2,
+}
+
+var reverseWeekdays = map[int]localize.Singular {
+  1: "Monday",
+  2: "Tuesday",
+}
+
+```
+
 ### Error texts
 
 Strings can be extracted from `errors.New` if xspreak is called with the `-e` option.
@@ -260,9 +284,3 @@ package main
 // xspreak: template
 const tmpl = `{{.T.Get "Hello"}}`
 ```
-
-## Roadmap
-
-* [ ] Map initialization
-* [ ] `append` to array
-* [ ] String backtracing
