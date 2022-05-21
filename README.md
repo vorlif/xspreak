@@ -1,6 +1,7 @@
 xspreak is the command line program for extracting strings for the [spreak library](https://github.com/vorlif/spreak).
 
-# xspreak [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+# xspreak [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![MinVersion](https://img.shields.io/badge/Go-1.18+-blue)
+
 
 xspreak automatically extracts strings that use a string alias from the localize package.
 The extracted strings are stored in a `.pot` file and can then be easily translated.
@@ -44,6 +45,11 @@ func main() {
 	// Hermosa app
 }
 ```
+
+## Requirements
+
+* Go 1.18+
+* Your project must be a go module (must have a go.mod and go.sum)
 
 ## How to install
 
