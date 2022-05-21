@@ -111,7 +111,7 @@ func (c *Config) Prepare() error {
 	}
 
 	if len(c.TemplatePatterns) > 0 && len(c.Keywords) == 0 {
-		c.Keywords = tmpl.DefaultKeywords(".T")
+		c.Keywords = tmpl.DefaultKeywords("T")
 	}
 
 	return nil

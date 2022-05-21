@@ -50,7 +50,7 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 				FromExtractor: v.Name(),
 				MsgID:         msgID,
 				Pkg:           pkg,
-				CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
 				Pos:           extractCtx.GetPosition(node.Rhs[0].Pos()),
 			}
 

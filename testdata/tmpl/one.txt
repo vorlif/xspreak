@@ -1,3 +1,6 @@
+{{/* TRANSLATORS: ignored */}}
+
+{{/* TRANSLATORS: added */}}
 {{.T.Get "Get-Singular"}}
 {{.T.Getf "Getf-Singular"}}
 

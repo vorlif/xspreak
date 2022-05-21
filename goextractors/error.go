@@ -57,7 +57,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 			MsgID:         msgID,
 			Pkg:           pkg,
 			Context:       extractCtx.Config.ErrorContext,
-			CommentGroups: extractCtx.GetComments(pkg, node, stack),
+			Comments:      extractCtx.GetComments(pkg, node, stack),
 			Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
 		}
 

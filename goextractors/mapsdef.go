@@ -73,7 +73,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 						FromExtractor: v.Name(),
 						MsgID:         msgID,
 						Pkg:           pkg,
-						CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+						Comments:      extractCtx.GetComments(pkg, stringNode, stack),
 						Pos:           extractCtx.GetPosition(stringNode.Pos()),
 					}
 

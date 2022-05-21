@@ -71,40 +71,39 @@ func ParseKeywords(spec string) (*Keyword, error) {
 	return k, nil
 }
 
-func DefaultKeywords(prefix string) []*Keyword {
-	prefix = strings.TrimSuffix(strings.TrimSpace(prefix), ".")
-	if prefix == "" {
-		prefix = ".T"
-	}
-
-	return []*Keyword{
-		{Name: prefix + ".Get", SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
-		{Name: prefix + ".Getf", SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
-
-		{Name: prefix + ".DGet", DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
-		{Name: prefix + ".DGetf", DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
-
-		{Name: prefix + ".NGet", SingularPos: 0, PluralPos: 1, ContextPos: -1, DomainPos: -1},
-		{Name: prefix + ".NGetf", SingularPos: 0, PluralPos: 1, ContextPos: -1, DomainPos: -1},
-
-		{Name: prefix + ".DNGet", DomainPos: 0, SingularPos: 1, PluralPos: 2, ContextPos: -1},
-		{Name: prefix + ".DNGetf", DomainPos: 0, SingularPos: 1, PluralPos: 2, ContextPos: -1},
-
-		{Name: prefix + ".PGet", ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
-		{Name: prefix + ".PGetf", ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
-
-		{Name: prefix + ".DPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
-		{Name: prefix + ".DPGetf", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
-
-		{Name: prefix + ".NPGet", ContextPos: 0, SingularPos: 1, PluralPos: 2, DomainPos: -1},
-		{Name: prefix + ".NPGetf", ContextPos: 0, SingularPos: 1, PluralPos: 2, DomainPos: -1},
-
-		{Name: prefix + ".DNPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 3},
-		{Name: prefix + ".DNPGetf", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 3},
-	}
+var keywordTemplates = []Keyword{
+	{Name: "Get", SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
+	{Name: "DGet", DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
+	{Name: "NGet", SingularPos: 0, PluralPos: 1, ContextPos: -1, DomainPos: -1},
+	{Name: "DNGet", DomainPos: 0, SingularPos: 1, PluralPos: 2, ContextPos: -1},
+	{Name: "PGet", ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
+	{Name: "DPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
+	{Name: "NPGet", ContextPos: 0, SingularPos: 1, PluralPos: 2, DomainPos: -1},
+	{Name: "DNPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 3},
 }
 
-func (k *Keyword) MaxIndex() int {
+func DefaultKeywords(name string) []*Keyword {
+	name = strings.Trim(strings.TrimSpace(name), ".")
+	if name == "" {
+		name = "T"
+	}
+
+	keywords := make([]*Keyword, 0, len(keywordTemplates)*4)
+
+	for _, prefix := range []string{"$.", "."} {
+		for _, suffix := range []string{"", "f"} {
+			for _, tmpl := range keywordTemplates {
+				keyword := tmpl
+				keyword.Name = prefix + name + "." + tmpl.Name + suffix
+				keywords = append(keywords, &keyword)
+			}
+		}
+	}
+
+	return keywords
+}
+
+func (k *Keyword) MaxPosition() int {
 	start := max(k.SingularPos, -1)
 	start = max(start, k.PluralPos)
 	start = max(start, k.ContextPos)

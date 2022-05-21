@@ -56,7 +56,7 @@ func (s translationBuilder) Process(inIssues []result.Issue) ([]result.Issue, er
 
 		iss.Message = &po.Message{
 			Comment: &po.Comment{
-				Extracted:  strings.Join(iss.Comment, "\n"),
+				Extracted:  strings.Join(iss.Comments, "\n"),
 				References: []*po.Reference{ref},
 				Flags:      iss.Flags,
 			},

@@ -10,12 +10,14 @@ import (
 	"github.com/vorlif/xspreak/config"
 	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/extract/extractors"
+	"github.com/vorlif/xspreak/tmpl"
 )
 
 func TestInlineExtraction(t *testing.T) {
 	cfg := config.NewDefault()
 	cfg.SourceDir = testdataDir
 	cfg.ExtractErrors = true
+	cfg.Keywords = tmpl.DefaultKeywords("T")
 	require.NoError(t, cfg.Prepare())
 	ctx := context.Background()
 	contextLoader := extract.NewContextLoader(cfg)

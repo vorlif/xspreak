@@ -205,7 +205,7 @@ func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
 	return TypeNone, nil
 }
 
-func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.Node) []*ast.CommentGroup {
+func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.Node) []string {
 	if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
 		return nil
 	}
@@ -226,11 +226,11 @@ func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.
 		topNode = entry
 	}
 
-	var comments []*ast.CommentGroup
+	var comments []string
 	ast.Inspect(topNode, func(node ast.Node) bool {
 		nodeComments := c.CommentMaps[pkg.PkgPath][pos.Filename][node]
-		if len(nodeComments) > 0 {
-			comments = append(comments, nodeComments...)
+		for _, com := range nodeComments {
+			comments = append(comments, com.Text())
 		}
 		return true
 	})

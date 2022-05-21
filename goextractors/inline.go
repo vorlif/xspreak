@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/token"
 	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -26,6 +25,11 @@ func NewInlineTemplateExtractor() extractors.Extractor {
 func (i *inlineTemplateExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	util.TrackTime(time.Now(), "extract inline templates")
 
+	if len(extractCtx.Config.Keywords) == 0 {
+		log.Debug("Skip inline template extraction, no keywords present")
+		return []result.Issue{}, nil
+	}
+
 	extractCtx.Inspector.WithStack([]ast.Node{&ast.BasicLit{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
 		proceed = true
 		if !push {
@@ -39,7 +43,6 @@ func (i *inlineTemplateExtractor) Run(_ context.Context, extractCtx *extractors.
 		// Search for ident to get the package
 		var pkg *packages.Package
 		for i := len(stack) - 1; i >= 0; i-- {
-
 			if stack[i] == nil {
 				break
 			}
@@ -66,18 +69,17 @@ func (i *inlineTemplateExtractor) Run(_ context.Context, extractCtx *extractors.
 		}
 
 		for _, comment := range comments {
-			for _, line := range strings.Split(comment.Text(), "\n") {
-				line = strings.TrimSpace(line)
-				if strings.HasPrefix(line, "xspreak:") && strings.Contains(line, "template") {
-					template, errP := tmpl.ParseString(pos.Filename, templateString)
-					if errP != nil {
-						log.WithError(errP).WithField("pos", pos).Warn("Template could not be parsed")
-						break
-					}
-					template.GoFilePos = pos
-					extractCtx.Templates = append(extractCtx.Templates, template)
-				}
+			if !util.IsInlineTemplate(comment) {
+				continue
 			}
+
+			template, errP := tmpl.ParseString(pos.Filename, templateString)
+			if errP != nil {
+				log.WithError(errP).WithField("pos", pos).Warn("Template could not be parsed")
+				break
+			}
+			template.GoFilePos = pos
+			extractCtx.Templates = append(extractCtx.Templates, template)
 		}
 
 		return

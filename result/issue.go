@@ -2,7 +2,6 @@ package result
 
 import (
 	"fmt"
-	"go/ast"
 	"go/token"
 
 	"golang.org/x/tools/go/packages"
@@ -18,9 +17,8 @@ type Issue struct {
 	MsgID    string
 	PluralID string
 
-	CommentGroups []*ast.CommentGroup
-	Comment       []string
-	Flags         []string
+	Comments []string
+	Flags    []string
 
 	Pkg *packages.Package
 

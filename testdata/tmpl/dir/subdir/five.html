@@ -1,0 +1,16 @@
+{{- define "todos" -}}
+<h1>{{.T "todos"}}</h1>
+<ul>
+    {{range .Todos}}
+    {{if .Done}}
+    <li class="done">{{.Title}}</li>
+    {{else}}
+    <li>{{.Title}}</li>
+    {{end}}
+    {{end}}
+</ul>
+{{- end -}}
+
+{{- define "help" -}}
+{{.T "Help" }}
+{{- end -}}

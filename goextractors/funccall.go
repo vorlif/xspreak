@@ -65,7 +65,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 				FromExtractor: v.Name(),
 				MsgID:         raw,
 				Pkg:           pkg,
-				CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
 				Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
 			}
 
@@ -81,7 +81,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			FromExtractor: v.Name(),
 			Pkg:           pkg,
 			Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
-			CommentGroups: extractCtx.GetComments(pkg, node.Args[0], stack),
+			Comments:      extractCtx.GetComments(pkg, node.Args[0], stack),
 		}
 		for _, def := range funcParameterDefs {
 			for i, arg := range node.Args {

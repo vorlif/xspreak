@@ -71,9 +71,9 @@ func (v structDefExtractor) Name() string {
 func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj types.Object, pkg *packages.Package, stack []ast.Node) []result.Issue {
 	var issues []result.Issue
 	issue := result.Issue{
-		Pkg:           pkg,
-		Pos:           extractCtx.GetPosition(node.Pos()),
-		CommentGroups: extractCtx.GetComments(pkg, node, stack),
+		Pkg:      pkg,
+		Pos:      extractCtx.GetPosition(node.Pos()),
+		Comments: extractCtx.GetComments(pkg, node, stack),
 	}
 	definitionKey := objToKey(obj)
 	if _, isKv := node.Elts[0].(*ast.KeyValueExpr); isKv {
@@ -101,9 +101,9 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 			if def.Token == extractors.TypeSingular && issue.MsgID != "" {
 				issues = append(issues, issue)
 				issue = result.Issue{
-					Pkg:           pkg,
-					Pos:           extractCtx.GetPosition(node.Pos()),
-					CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+					Pkg:      pkg,
+					Pos:      extractCtx.GetPosition(node.Pos()),
+					Comments: extractCtx.GetComments(pkg, stringNode, stack),
 				}
 			}
 
@@ -133,9 +133,9 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 				if attrDef.Token == extractors.TypeSingular && issue.MsgID != "" {
 					issues = append(issues, issue)
 					issue = result.Issue{
-						Pkg:           pkg,
-						Pos:           extractCtx.GetPosition(node.Pos()),
-						CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+						Pkg:      pkg,
+						Pos:      extractCtx.GetPosition(node.Pos()),
+						Comments: extractCtx.GetComments(pkg, stringNode, stack),
 					}
 				}
 

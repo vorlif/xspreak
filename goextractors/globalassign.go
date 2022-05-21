@@ -58,7 +58,7 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 				FromExtractor: v.Name(),
 				MsgID:         msgID,
 				Pkg:           pkg,
-				CommentGroups: extractCtx.GetComments(pkg, stringNode, stack),
+				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
 				Pos:           extractCtx.GetPosition(value.Pos()),
 			}
 

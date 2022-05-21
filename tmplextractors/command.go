@@ -18,7 +18,7 @@ func NewCommandExtractor() extractors.Extractor {
 	return &commandExtractor{}
 }
 
-func (c *commandExtractor) Run(ctx context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
+func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	var issues []result.Issue
 	if len(extractCtx.Config.Keywords) == 0 {
 		log.Debug("Skip template extraction, no keywords present")
@@ -26,8 +26,10 @@ func (c *commandExtractor) Run(ctx context.Context, extractCtx *extractors.Conte
 	}
 
 	for _, template := range extractCtx.Templates {
+		template.ExtractComments()
+
 		template.Inspector.WithStack([]parse.Node{&parse.PipeNode{}}, func(n parse.Node, push bool, stack []parse.Node) (proceed bool) {
-			proceed = true
+			proceed = false
 			if !push {
 				return
 			}
@@ -37,16 +39,13 @@ func (c *commandExtractor) Run(ctx context.Context, extractCtx *extractors.Conte
 			}
 
 			for _, cmd := range pipe.Cmds {
-				iss := extractIssue(cmd, extractCtx)
-				if iss != nil {
-					iss.Pos = template.GoFilePos
-					if iss.Pos.Filename == "" {
-						iss.Pos.Filename = template.File
-						iss.Pos.Offset = int(cmd.Pos)
-					}
-					iss.Flags = append(iss.Flags, "go-template")
-					issues = append(issues, *iss)
+				iss := extractIssue(cmd, extractCtx, template)
+				if iss == nil {
+					continue
 				}
+
+				iss.Flags = append(iss.Flags, "go-template")
+				issues = append(issues, *iss)
 			}
 
 			return
@@ -59,7 +58,7 @@ func (c *commandExtractor) Name() string {
 	return "tmpl_command"
 }
 
-func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context) *result.Issue {
+func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context, template *tmpl.Template) *result.Issue {
 	if cmd == nil {
 		return nil
 	}
@@ -69,22 +68,24 @@ func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context) *resul
 			continue
 		}
 
-		if keyword.MaxIndex() >= len(cmd.Args)-1 { // The first index contains the keyword itself
-			log.Warnf("Template keyword found but not enough arguments available: %s", raw)
+		if keyword.MaxPosition() >= len(cmd.Args)-1 { // The first index contains the keyword itself
+			log.Warnf("Template keyword found but not enough arguments available: %s %s", template.Position(cmd.Pos), raw)
 			continue
 		}
 
-		return extractArgs(cmd.Args[1:], keyword)
+		return extractArgs(cmd.Args[1:], keyword, template)
 	}
 
 	return nil
 }
 
-func extractArgs(args []parse.Node, keyword *tmpl.Keyword) *result.Issue {
+func extractArgs(args []parse.Node, keyword *tmpl.Keyword, template *tmpl.Template) *result.Issue {
 	iss := &result.Issue{}
 
 	if stringNode, ok := args[keyword.SingularPos].(*parse.StringNode); ok {
 		iss.MsgID = stringNode.Text
+		iss.Comments = template.GetComments(args[keyword.SingularPos].Position())
+		iss.Pos = template.Position(args[keyword.SingularPos].Position())
 	} else {
 		log.Warnf("Template keyword is not passed a string: %s", args[keyword.SingularPos])
 		return nil

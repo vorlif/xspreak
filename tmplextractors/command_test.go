@@ -94,3 +94,55 @@ func TestKeyword(t *testing.T) {
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)
 }
+
+func TestCommentExtraction(t *testing.T) {
+	issues := runExtraction(t, testdataDir, NewCommandExtractor())
+	require.NotEmpty(t, issues)
+
+	comments := make([]string, 0, len(issues))
+	for _, issue := range issues {
+		comments = append(comments, issue.Comments...)
+	}
+	assert.Len(t, comments, 1)
+}
+
+func TestComplex(t *testing.T) {
+	cfg := config.NewDefault()
+	cfg.SourceDir = testdataDir
+	cfg.ExtractErrors = false
+	cfg.Keywords = []*tmpl.Keyword{
+		{
+			Name:        ".T",
+			SingularPos: 0,
+			PluralPos:   -1,
+			ContextPos:  -1,
+			DomainPos:   -1,
+		},
+	}
+	cfg.TemplatePatterns = []string{
+		testdataTemplates + "/**/*.txt",
+		testdataTemplates + "/**/*.html",
+		testdataTemplates + "/**/*.tmpl",
+	}
+
+	require.NoError(t, cfg.Prepare())
+
+	ctx := context.Background()
+	contextLoader := extract.NewContextLoader(cfg)
+
+	extractCtx, err := contextLoader.Load(ctx)
+	require.NoError(t, err)
+
+	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
+	require.NoError(t, err)
+
+	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{NewCommandExtractor()})
+	require.NoError(t, err)
+
+	want := []string{
+		"todos",
+		"Help",
+	}
+	got := collectIssueStrings(issues)
+	assert.ElementsMatch(t, want, got)
+}
