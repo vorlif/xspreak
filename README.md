@@ -48,7 +48,7 @@ func main() {
 ## How to install
 
 ```bash
-go install github.com/vorlif/xspreak@v0.3.0
+go install github.com/vorlif/xspreak@v0.4.0
 xspreak --help
 ```
 
@@ -254,7 +254,7 @@ and in subdirectories of the templates directory.
 
 With `--template-prefix` you can specify a prefix for the template function.
 
-For example, with `--template-prefix ".T"` the following function calls are extracted
+For example, with `--template-prefix "T"` the following function calls are extracted
 
 ```text
 {{.T.Get "Hello world"}}
@@ -284,3 +284,6 @@ package main
 // xspreak: template
 const tmpl = `{{.T.Get "Hello"}}`
 ```
+
+There is also a [detailed example](https://github.com/vorlif/spreak/tree/main/examples/features/httptempl) how to use
+spreak with templates and your own keywords.
