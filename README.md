@@ -53,8 +53,14 @@ func main() {
 
 ## How to install
 
+Download the [pre-built binary from the releases](https://github.com/vorlif/xspreak/releases/latest) or create it from source:
+
 ```bash
-go install github.com/vorlif/xspreak@v0.4.0
+go install github.com/vorlif/xspreak@latest
+```
+
+Tests installation with:
+```bash
 xspreak --help
 ```
 
