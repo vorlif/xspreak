@@ -43,7 +43,7 @@ func NewDefault() *Config {
 	return &Config{
 		IsVerbose:       false,
 		SourceDir:       "",
-		OutputDir:       "./",
+		OutputDir:       filepath.Clean("./"),
 		OutputFile:      "",
 		CommentPrefixes: []string{"TRANSLATORS"},
 		ExtractErrors:   false,

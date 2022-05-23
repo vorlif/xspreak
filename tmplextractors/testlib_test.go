@@ -2,6 +2,7 @@ package tmplextractors
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,9 +13,9 @@ import (
 	"github.com/vorlif/xspreak/result"
 )
 
-const (
-	testdataDir       = "../testdata/project"
-	testdataTemplates = "../testdata/tmpl"
+var (
+	testdataDir       = filepath.FromSlash("../testdata/project")
+	testdataTemplates = filepath.FromSlash("../testdata/tmpl")
 )
 
 func runExtraction(t *testing.T, dir string, testExtractors ...extractors.Extractor) []result.Issue {
