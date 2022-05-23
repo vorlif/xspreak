@@ -1,6 +1,6 @@
 xspreak is the command line program for extracting strings for the [spreak library](https://github.com/vorlif/spreak).
 
-# xspreak [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![MinVersion](https://img.shields.io/badge/Go-1.18+-blue)
+# xspreak ![Test status](https://github.com/vorlif/xspreak/workflows/Test/badge.svg) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![MinVersion](https://img.shields.io/badge/Go-1.18+-blue)
 
 
 xspreak automatically extracts strings that use a string alias from the localize package.
