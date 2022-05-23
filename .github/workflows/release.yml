@@ -1,4 +1,4 @@
-name: Release
+name: Upload Release Assets
 
 on:
   release:
@@ -6,6 +6,7 @@ on:
 
 jobs:
   release:
+    name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -26,11 +27,13 @@ jobs:
           script: |
             const fs = require("fs").promises;
             const { repo: { owner, repo }, sha } = context;
+
             const release = await github.repos.getReleaseByTag({
               owner, repo,
               tag: process.env.GITHUB_REF.replace("refs/tags/", ""),
             });
             console.log("Release:", { release });
+
             for (let file of await fs.readdir(".")) {
               if (!file.startsWith("xspreak-")) continue;
               console.log("Uploading", file);
@@ -41,4 +44,3 @@ jobs:
                 data: await fs.readFile(file),
               });
             }
-            
