@@ -20,7 +20,7 @@ type Runner struct {
 	Log        *logrus.Entry
 }
 
-func NewRunner(cfg *config.Config, pkgs map[string]*packages.Package) (*Runner, error) {
+func NewRunner(cfg *config.Config, _ map[string]*packages.Package) (*Runner, error) {
 	p := []processors.Processor{
 		processors.NewSkipEmptyMsgID(),
 	}
@@ -32,7 +32,6 @@ func NewRunner(cfg *config.Config, pkgs map[string]*packages.Package) (*Runner, 
 	p = append(p,
 		processors.NewCommentCleaner(cfg),
 		processors.NewSkipIgnore(),
-		processors.BuildTranslations(cfg),
 	)
 
 	ret := &Runner{

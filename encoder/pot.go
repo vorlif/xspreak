@@ -3,13 +3,22 @@ package encoder
 import (
 	"fmt"
 	"io"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/vorlif/spreak/pkg/po"
 
 	"github.com/vorlif/xspreak/config"
 	"github.com/vorlif/xspreak/result"
+	"github.com/vorlif/xspreak/util"
 )
+
+// Recognizes not all cases, but most. - See Unit tests.
+var reGoStringFormat = regexp.MustCompile(`%([#+\-*0.])?(\[\d])?(([1-9])\.([1-9])|([1-9])|([1-9])\.|\.([1-9]))?[xsvTtbcdoOqXUeEfFgGp]`)
 
 type Encoder interface {
 	Encode(issues []result.Issue) error
@@ -36,11 +45,54 @@ func (e *potEncoder) Encode(issues []result.Issue) error {
 		Messages: make(map[string]map[string]*po.Message),
 	}
 
-	for _, iss := range issues {
-		file.AddMessage(iss.Message)
+	for _, msg := range e.buildMessages(issues) {
+		file.AddMessage(msg)
 	}
 
 	return e.w.Encode(file)
+}
+
+func (e *potEncoder) buildMessages(issues []result.Issue) []*po.Message {
+	util.TrackTime(time.Now(), "Build messages")
+	messages := make([]*po.Message, 0, len(issues))
+
+	absOut, errA := filepath.Abs(e.cfg.OutputDir)
+	if errA != nil {
+		absOut = e.cfg.OutputDir
+	}
+
+	for _, iss := range issues {
+		path, errP := filepath.Rel(absOut, iss.Pos.Filename)
+		if errP != nil {
+			logrus.WithError(errP).Warn("Relative path could not be created, use absolute")
+			path = iss.Pos.Filename
+		}
+
+		ref := &po.Reference{
+			Path:   filepath.ToSlash(path),
+			Line:   iss.Pos.Line,
+			Column: iss.Pos.Column,
+		}
+
+		if reGoStringFormat.MatchString(iss.MsgID) || reGoStringFormat.MatchString(iss.PluralID) {
+			iss.Flags = append(iss.Flags, "go-format")
+		}
+
+		msg := &po.Message{
+			Comment: &po.Comment{
+				Extracted:  strings.Join(iss.Comments, "\n"),
+				References: []*po.Reference{ref},
+				Flags:      iss.Flags,
+			},
+			Context:  iss.Context,
+			ID:       iss.MsgID,
+			IDPlural: iss.PluralID,
+		}
+
+		messages = append(messages, msg)
+	}
+
+	return messages
 }
 
 func (e *potEncoder) buildHeader() *po.Header {

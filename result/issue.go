@@ -5,8 +5,6 @@ import (
 	"go/token"
 
 	"golang.org/x/tools/go/packages"
-
-	"github.com/vorlif/spreak/pkg/po"
 )
 
 type Issue struct {
@@ -23,8 +21,6 @@ type Issue struct {
 	Pkg *packages.Package
 
 	Pos token.Position
-
-	Message *po.Message
 }
 
 func (i *Issue) FilePath() string {
