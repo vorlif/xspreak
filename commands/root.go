@@ -22,7 +22,7 @@ type Executor struct {
 	contextLoader *extract.ContextLoader
 }
 
-func NewExecutor() *Executor {
+func NewExecutor(version string) *Executor {
 	e := &Executor{
 		cfg: config.NewDefault(),
 		log: logrus.WithField("service", "executor"),
@@ -30,7 +30,7 @@ func NewExecutor() *Executor {
 
 	e.rootCmd = &cobra.Command{
 		Use:     "xspreak",
-		Version: VersionName,
+		Version: version,
 		Short:   "String extraction for spreak.",
 		Long:    `Simple tool to extract strings and create POT files for application translations.`,
 		Run:     e.executeRun,
