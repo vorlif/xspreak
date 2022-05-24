@@ -1,6 +1,6 @@
 xspreak is the command line program for extracting strings for the [spreak library](https://github.com/vorlif/spreak).
 
-# xspreak ![Test status](https://github.com/vorlif/xspreak/workflows/Test/badge.svg) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![MinVersion](https://img.shields.io/badge/Go-1.18+-blue)
+# xspreak ![Test status](https://github.com/vorlif/xspreak/workflows/Test/badge.svg) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 
 xspreak automatically extracts strings that use a string alias from the localize package.
@@ -48,7 +48,6 @@ func main() {
 
 ## Requirements
 
-* Go 1.18+
 * Your project must be a go module (must have a go.mod and go.sum)
 
 ## How to install
@@ -65,6 +64,16 @@ xspreak --help
 ```
 
 ## What can be extracted?
+
+### spreak functions calls
+
+All function calls of spreak translation functions, where a string is passed, are extracted.
+
+```go
+t.Get("Hello world")
+t.Nget("Hello world", "Hello worlds")
+// ...
+```
 
 ### Global variables and constants
 
