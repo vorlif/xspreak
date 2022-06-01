@@ -308,3 +308,23 @@ const tmpl = `{{.T.Get "Hello"}}`
 
 There is also a [detailed example](https://github.com/vorlif/spreak/tree/main/examples/features/httptempl) how to use
 spreak with templates and your own keywords.
+
+### Using Key-Value
+
+To use Key-Value, the following changes must be made.
+
+1. Instead of `localize.Singular` and `localize.MsgID` use `localize.Key`.
+2. If a key also has a plural form, `localize.PluralKey` must be used.
+3. When extracting templates `--template-use-kv` must be added
+4. If a separate key is defined for templates, the position of singular and plural must be identical for plural:
+   ```shell
+   # Example
+   xspreak -f json -D ./ -p locale/ -k "i18n.TrN:1,1" --template-use-kv -t "templates/*.html"
+   ```
+   
+5. Use [KeyLocalizer](https://pkg.go.dev/github.com/vorlif/spreak#KeyLocalizer) instead of Localizer in the code
+
+### Supported export formats
+
+1. `po`/`pot` (Default) `xspreak ...`
+2. `json`: `xspreak -f json ...`
