@@ -4,17 +4,20 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/vorlif/xspreak/extract/etype"
 )
 
 type Keyword struct {
 	Name        string
+	IDToken     etype.Token
 	SingularPos int
 	PluralPos   int
 	ContextPos  int
 	DomainPos   int
 }
 
-func ParseKeywords(spec string) (*Keyword, error) {
+func ParseKeywords(spec string, isMonolingual bool) (*Keyword, error) {
 	var functionName string
 	var args []string
 	idx := strings.IndexByte(spec, ':')
@@ -27,10 +30,15 @@ func ParseKeywords(spec string) (*Keyword, error) {
 
 	k := &Keyword{
 		Name:        functionName,
+		IDToken:     etype.Singular,
 		SingularPos: 0,
 		PluralPos:   -1,
 		ContextPos:  -1,
 		DomainPos:   -1,
+	}
+
+	if isMonolingual {
+		k.IDToken = etype.Key
 	}
 
 	inputType := 0
@@ -71,21 +79,39 @@ func ParseKeywords(spec string) (*Keyword, error) {
 	return k, nil
 }
 
-var keywordTemplates = []Keyword{
-	{Name: "Get", SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
-	{Name: "DGet", DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
-	{Name: "NGet", SingularPos: 0, PluralPos: 1, ContextPos: -1, DomainPos: -1},
-	{Name: "DNGet", DomainPos: 0, SingularPos: 1, PluralPos: 2, ContextPos: -1},
-	{Name: "PGet", ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
-	{Name: "DPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
-	{Name: "NPGet", ContextPos: 0, SingularPos: 1, PluralPos: 2, DomainPos: -1},
-	{Name: "DNPGet", DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 3},
+var bilingualKeywordTemplates = []Keyword{
+	{Name: "Get", IDToken: etype.Singular, SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
+	{Name: "DGet", IDToken: etype.Singular, DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
+	{Name: "NGet", IDToken: etype.Singular, SingularPos: 0, PluralPos: 1, ContextPos: -1, DomainPos: -1},
+	{Name: "DNGet", IDToken: etype.Singular, DomainPos: 0, SingularPos: 1, PluralPos: 2, ContextPos: -1},
+	{Name: "PGet", IDToken: etype.Singular, ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
+	{Name: "DPGet", IDToken: etype.Singular, DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
+	{Name: "NPGet", IDToken: etype.Singular, ContextPos: 0, SingularPos: 1, PluralPos: 2, DomainPos: -1},
+	{Name: "DNPGet", IDToken: etype.Singular, DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 3},
 }
 
-func DefaultKeywords(name string) []*Keyword {
+var monolingualKeywordTemplates = []Keyword{
+	{Name: "Get", IDToken: etype.Key, SingularPos: 0, PluralPos: -1, ContextPos: -1, DomainPos: -1},
+	{Name: "DGet", IDToken: etype.Key, DomainPos: 0, SingularPos: 1, PluralPos: -1, ContextPos: -1},
+	{Name: "NGet", IDToken: etype.PluralKey, SingularPos: 0, PluralPos: 0, ContextPos: -1, DomainPos: -1},
+	{Name: "DNGet", IDToken: etype.PluralKey, DomainPos: 0, SingularPos: 1, PluralPos: 1, ContextPos: -1},
+	{Name: "PGet", IDToken: etype.Singular, ContextPos: 0, SingularPos: 1, PluralPos: -1, DomainPos: -1},
+	{Name: "DPGet", IDToken: etype.Singular, DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: -1},
+	{Name: "NPGet", IDToken: etype.PluralKey, ContextPos: 0, SingularPos: 1, PluralPos: 1, DomainPos: -1},
+	{Name: "DNPGet", IDToken: etype.PluralKey, DomainPos: 0, ContextPos: 1, SingularPos: 2, PluralPos: 2},
+}
+
+func DefaultKeywords(name string, isMonolingual bool) []*Keyword {
 	name = strings.Trim(strings.TrimSpace(name), ".")
 	if name == "" {
 		name = "T"
+	}
+
+	var keywordTemplates []Keyword
+	if isMonolingual {
+		keywordTemplates = monolingualKeywordTemplates
+	} else {
+		keywordTemplates = bilingualKeywordTemplates
 	}
 
 	keywords := make([]*Keyword, 0, len(keywordTemplates)*4)

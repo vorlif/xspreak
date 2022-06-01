@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"time"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
@@ -55,7 +56,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			return
 		}
 
-		if tok := extractCtx.GetLocalizeTypeToken(ident); tok == extractors.TypeSingular {
+		if tok := extractCtx.GetLocalizeTypeToken(ident); etype.IsMessageID(tok) {
 			raw, stringNode := ExtractStringLiteral(node.Args[0])
 			if raw == "" {
 				return
@@ -63,6 +64,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 
 			issue := result.Issue{
 				FromExtractor: v.Name(),
+				IDToken:       tok,
 				MsgID:         raw,
 				Pkg:           pkg,
 				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
@@ -72,7 +74,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			issues = append(issues, issue)
 		}
 
-		funcParameterDefs := extractCtx.Definitions.GetFields(objToKey(obj))
+		funcParameterDefs := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
 		if funcParameterDefs == nil {
 			return
 		}
@@ -94,13 +96,14 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 					return
 				}
 				switch def.Token {
-				case extractors.TypeSingular:
+				case etype.Singular, etype.Key, etype.PluralKey:
+					issue.IDToken = def.Token
 					issue.MsgID = raw
-				case extractors.TypePlural:
+				case etype.Plural:
 					issue.PluralID = raw
-				case extractors.TypeContext:
+				case etype.Context:
 					issue.Context = raw
-				case extractors.TypeDomain:
+				case etype.Domain:
 					issue.Domain = raw
 				}
 			}

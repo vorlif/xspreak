@@ -1,7 +1,6 @@
 package extractors
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/vorlif/xspreak/config"
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/tmpl"
 	"github.com/vorlif/xspreak/util"
 )
@@ -69,9 +69,9 @@ func (c *Context) GetType(ident *ast.Ident) (*packages.Package, types.Object) {
 	return nil, nil
 }
 
-func (c *Context) GetLocalizeTypeToken(expr ast.Expr) TypeToken {
+func (c *Context) GetLocalizeTypeToken(expr ast.Expr) etype.Token {
 	if expr == nil {
-		return TypeNone
+		return etype.None
 	}
 
 	switch v := expr.(type) {
@@ -80,21 +80,21 @@ func (c *Context) GetLocalizeTypeToken(expr ast.Expr) TypeToken {
 	case *ast.Ident:
 		_, vType := c.GetType(v)
 		if vType == nil {
-			return TypeNone
+			return etype.None
 		}
 
 		if vType.Pkg() == nil || vType.Pkg().Path() != config.SpreakLocalizePackagePath {
-			return TypeNone
+			return etype.None
 		}
 
-		tok, ok := stringExtractNames[vType.Name()]
+		tok, ok := etype.StringExtractNames[vType.Name()]
 		if !ok {
-			return TypeNone
+			return etype.None
 		}
 
 		return tok
 	default:
-		return TypeNone
+		return etype.None
 	}
 }
 
@@ -119,10 +119,10 @@ func (c *Context) SearchIdent(start ast.Node) *ast.Ident {
 	return nil
 }
 
-func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
+func (c *Context) SearchIdentAndToken(start ast.Node) (etype.Token, *ast.Ident) {
 	switch val := start.(type) {
 	case *ast.Ident:
-		if tok := c.GetLocalizeTypeToken(val); tok != TypeNone {
+		if tok := c.GetLocalizeTypeToken(val); tok != etype.None {
 			return tok, val
 		}
 
@@ -131,7 +131,7 @@ func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
 			break
 		}
 
-		if def := c.Definitions.Get(objToKey(obj), ""); def != nil {
+		if def := c.Definitions.Get(util.ObjToKey(obj), ""); def != nil {
 			return def.Token, val
 		}
 	case *ast.StarExpr:
@@ -146,12 +146,12 @@ func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
 
 	selector := searchSelector(start)
 	if selector == nil {
-		return TypeNone, nil
+		return etype.None, nil
 	}
 
 	switch ident := selector.X.(type) {
 	case *ast.Ident:
-		if tok := c.GetLocalizeTypeToken(ident); tok != TypeNone {
+		if tok := c.GetLocalizeTypeToken(ident); tok != etype.None {
 			return tok, ident
 		}
 
@@ -160,49 +160,35 @@ func (c *Context) SearchIdentAndToken(start ast.Node) (TypeToken, *ast.Ident) {
 			break
 		}
 
-		if def := c.Definitions.Get(objToKey(obj), ""); def != nil {
+		if def := c.Definitions.Get(util.ObjToKey(obj), ""); def != nil {
 			return def.Token, ident
 		}
-		if def := c.Definitions.Get(objToKey(obj), selector.Sel.Name); def != nil {
+		if def := c.Definitions.Get(util.ObjToKey(obj), selector.Sel.Name); def != nil {
 			return def.Token, ident
 		}
 
 		if obj.Type() == nil {
 			break
 		}
-
-		if pointer, ok := obj.Type().(*types.Pointer); ok {
-			if def := c.Definitions.Get(pointer.Elem().String(), selector.Sel.Name); def != nil {
-				return def.Token, ident
-			}
-		}
 	}
 
-	if tok := c.GetLocalizeTypeToken(selector.Sel); tok != TypeNone {
+	if tok := c.GetLocalizeTypeToken(selector.Sel); tok != etype.None {
 		return tok, selector.Sel
 	}
 
 	pkg, obj := c.GetType(selector.Sel)
 	if pkg == nil {
-		return TypeNone, nil
+		return etype.None, nil
 	}
 
-	if def := c.Definitions.Get(objToKey(obj), ""); def != nil {
+	if def := c.Definitions.Get(util.ObjToKey(obj), ""); def != nil {
 		return def.Token, selector.Sel
 	}
-	if def := c.Definitions.Get(objToKey(obj), selector.Sel.Name); def != nil {
+	if def := c.Definitions.Get(util.ObjToKey(obj), selector.Sel.Name); def != nil {
 		return def.Token, selector.Sel
 	}
 
-	if obj.Type() != nil {
-		if pointer, ok := obj.Type().(*types.Pointer); ok {
-			if def := c.Definitions.Get(pointer.Elem().String(), selector.Sel.Name); def != nil {
-				return def.Token, selector.Sel
-			}
-		}
-	}
-
-	return TypeNone, nil
+	return etype.None, nil
 }
 
 func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.Node) []string {
@@ -283,10 +269,6 @@ func (c *Context) isPartOfDirectory(pkg *packages.Package) bool {
 	}
 
 	return false
-}
-
-func objToKey(obj types.Object) string {
-	return fmt.Sprintf("%s.%s", obj.Pkg().Path(), obj.Name())
 }
 
 func searchSelector(expr interface{}) *ast.SelectorExpr {

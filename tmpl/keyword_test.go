@@ -8,7 +8,7 @@ import (
 )
 
 func TestDefaultKeywords(t *testing.T) {
-	keywords := DefaultKeywords("..T.")
+	keywords := DefaultKeywords("..T.", false)
 	assert.Len(t, keywords, 32)
 	pointCount := 0
 	dollarCount := 0

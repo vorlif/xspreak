@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"time"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
@@ -34,7 +35,7 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 		}
 
 		tok := extractCtx.GetLocalizeTypeToken(selector)
-		if tok != extractors.TypeSingular {
+		if tok != etype.Singular {
 			return
 		}
 

@@ -1,119 +1,224 @@
 package commands
 
 import (
+	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/vorlif/xspreak/config"
+	"github.com/vorlif/xspreak/encoder"
 	"github.com/vorlif/xspreak/extract"
+	"github.com/vorlif/xspreak/extract/extractors"
+	"github.com/vorlif/xspreak/goextractors"
+	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/tmpl"
+	"github.com/vorlif/xspreak/tmplextractors"
 )
 
-type Executor struct {
-	rootCmd    *cobra.Command
-	extractCmd *cobra.Command
+// Version can be set at link time.
+var Version = "0.0.0"
 
-	cfg *config.Config
-	log *logrus.Entry
+var (
+	extractCfg = config.NewDefault()
 
-	contextLoader *extract.ContextLoader
+	rootCmd = &cobra.Command{
+		Use:     "xspreak",
+		Version: Version,
+		Short:   "String extraction for spreak.",
+		Long:    `Simple tool to extract strings and create POT/JSON files for application translations.`,
+		Run:     extractCmdF,
+	}
+)
+
+func Execute() error {
+	return rootCmd.Execute()
 }
 
-func NewExecutor(version string) *Executor {
-	e := &Executor{
-		cfg: config.NewDefault(),
-		log: logrus.WithField("service", "executor"),
-	}
+func init() {
+	def := config.NewDefault()
 
-	e.rootCmd = &cobra.Command{
-		Use:     "xspreak",
-		Version: version,
-		Short:   "String extraction for spreak.",
-		Long:    `Simple tool to extract strings and create POT files for application translations.`,
-		Run:     e.executeRun,
-	}
+	rootCmd.PersistentFlags().BoolVarP(&extractCfg.IsVerbose, "verbose", "V", def.IsVerbose, "increase verbosity level")
+	rootCmd.PersistentFlags().DurationVar(&extractCfg.Timeout, "timeout", def.Timeout, "Timeout for total work")
 
-	fs := pflag.NewFlagSet("config flag set", pflag.ContinueOnError)
-	fs.ParseErrorsWhitelist = pflag.ParseErrorsWhitelist{UnknownFlags: true}
-	fs.Usage = func() {}
+	fs := rootCmd.Flags()
 	fs.SortFlags = false
-	e.rootCmd.PersistentFlags().SortFlags = false
-	initRootFlags(e.rootCmd.PersistentFlags(), config.NewDefault())
-	initRootFlags(fs, e.cfg)
+	fs.StringVarP(&extractCfg.ExtractFormat, "format", "f", def.ExtractFormat, "Output format of the extraction. Valid values are 'pot' and 'json'.")
+	fs.StringVarP(&extractCfg.SourceDir, "directory", "D", def.SourceDir, "Directory with the Go source files")
+	fs.StringVarP(&extractCfg.OutputDir, "output-dir", "p", def.OutputDir, "Directory in which the pot files are stored.")
+	fs.StringVarP(&extractCfg.OutputFile, "output", "o", def.OutputFile, "Write output to specified file")
+	fs.StringSliceVarP(&extractCfg.CommentPrefixes, "add-comments", "c", def.CommentPrefixes, "Place comment blocks starting with TAG and preceding keyword lines in output file")
+	fs.BoolVarP(&extractCfg.ExtractErrors, "extract-errors", "e", def.ExtractErrors, "Strings from errors.New(STRING) are extracted")
+	fs.StringVar(&extractCfg.ErrorContext, "errors-context", def.ErrorContext, "Context which is automatically assigned to extracted errors")
 
-	if err := fs.Parse(os.Args); err != nil {
-		if err != pflag.ErrHelp {
-			logrus.WithError(err).Fatal("Args could not be parsed")
-		}
-	}
+	fs.StringArrayVarP(&extractCfg.TemplatePatterns, "template-directory", "t", def.TemplatePatterns, "Set a list of paths to which the template files contain. Regular expressions can be used.")
+	fs.String("template-prefix", ".T", "Sets a prefix for the translation functions, which is used within the templates")
+	fs.BoolVar(&extractCfg.TmplIsMonolingual, "template-use-kv", false, "Determines whether the strings from templates should be handled as key-value")
+	fs.StringArrayP("template-keyword", "k", []string{}, "Sets a keyword that is used within templates to identify translation functions")
 
+	fs.StringVarP(&extractCfg.DefaultDomain, "default-domain", "d", def.DefaultDomain, "Use name.pot for output (instead of messages.pot)")
+	fs.BoolVar(&extractCfg.WriteNoLocation, "no-location", def.WriteNoLocation, "Do not write '#: filename:line' lines")
+
+	fs.IntVarP(&extractCfg.WrapWidth, "width", "w", def.WrapWidth, "Set output page width")
+	fs.BoolVar(&extractCfg.DontWrap, "no-wrap", def.DontWrap, "Do not break long message lines, longer than the output page width, into several lines")
+
+	fs.BoolVar(&extractCfg.OmitHeader, "omit-header", def.OmitHeader, "Don't write header with 'msgid \"\"' entry")
+	fs.StringVar(&extractCfg.CopyrightHolder, "copyright-holder", def.CopyrightHolder, "Set copyright holder in output")
+	fs.StringVar(&extractCfg.PackageName, "package-name", def.PackageName, "Set package name in output")
+	fs.StringVar(&extractCfg.BugsAddress, "msgid-bugs-address", def.BugsAddress, "Set report address for msgid bugs")
+}
+
+func validateExtractConfig(cmd *cobra.Command) {
+	fs := cmd.Flags()
 	if keywordPrefix, errP := fs.GetString("template-prefix"); errP != nil {
-		logrus.WithError(errP).Fatal("Args could not be parsed")
+		log.WithError(errP).Fatal("Args could not be parsed")
 	} else {
-		e.cfg.Keywords = tmpl.DefaultKeywords(keywordPrefix)
+		extractCfg.Keywords = tmpl.DefaultKeywords(keywordPrefix, extractCfg.TmplIsMonolingual)
 	}
 
 	if rawKeywords, err := fs.GetStringArray("template-keyword"); err != nil {
-		logrus.WithError(err).Fatal("Args could not be parsed")
+		log.WithError(err).Fatal("Args could not be parsed")
 	} else {
 		for _, raw := range rawKeywords {
-			if kw, errKw := tmpl.ParseKeywords(raw); errKw != nil {
-				logrus.WithError(errKw).Fatalf("Arg could not be parsed %s", raw)
+			if kw, errKw := tmpl.ParseKeywords(raw, extractCfg.TmplIsMonolingual); errKw != nil {
+				log.WithError(errKw).Fatalf("Arg could not be parsed %s", raw)
 			} else {
-				e.cfg.Keywords = append(e.cfg.Keywords, kw)
+				extractCfg.Keywords = append(extractCfg.Keywords, kw)
 			}
 		}
 	}
 
-	if err := e.cfg.Prepare(); err != nil {
-		logrus.Fatalf("Configuration could not be processed %v", err)
+	if err := extractCfg.Prepare(); err != nil {
+		log.Fatalf("Configuration could not be processed: %v", err)
 	}
 
-	if e.cfg.IsVerbose {
-		logrus.SetLevel(logrus.DebugLevel)
+	if extractCfg.IsVerbose {
+		log.SetLevel(log.DebugLevel)
 	}
 
-	e.log.Debug("Starting execution...")
-
-	e.initExtract()
-
-	e.contextLoader = extract.NewContextLoader(e.cfg)
-
-	return e
+	log.Debug("Starting execution...")
 }
 
-func (e *Executor) Execute() error {
-	return e.rootCmd.Execute()
+func extractCmdF(cmd *cobra.Command, args []string) {
+	validateExtractConfig(cmd)
+	extractCfg.Args = args
+
+	extractor := NewExtractor()
+	extractor.extract()
 }
 
-func initRootFlags(fs *pflag.FlagSet, cfg *config.Config) {
-	def := config.NewDefault()
+type Extractor struct {
+	cfg *config.Config
+	log *log.Entry
 
-	fs.BoolVarP(&cfg.IsVerbose, "verbose", "V", def.IsVerbose, "Author name for copyright attribution")
-	fs.StringVarP(&cfg.SourceDir, "directory", "D", def.SourceDir, "Directory with the Go source files")
-	fs.StringVarP(&cfg.OutputDir, "output-dir", "p", def.OutputDir, "Directory in which the pot files are stored.")
-	fs.StringVarP(&cfg.OutputFile, "output", "o", def.OutputFile, "Write output to specified file")
-	fs.StringSliceVarP(&cfg.CommentPrefixes, "add-comments", "c", def.CommentPrefixes, "Place comment blocks starting with TAG and preceding keyword lines in output file")
-	fs.BoolVarP(&cfg.ExtractErrors, "extract-errors", "e", def.ExtractErrors, "Strings from errors.New(STRING) are extracted")
-	fs.StringVar(&cfg.ErrorContext, "errors-context", def.ErrorContext, "Context which is automatically assigned to extracted errors")
+	contextLoader *extract.ContextLoader
+}
 
-	fs.StringArrayVarP(&cfg.TemplatePatterns, "template-directory", "t", def.TemplatePatterns, "Set a list of paths to which the template files contain. Regular expressions can be used.")
-	fs.String("template-prefix", ".T", "Sets a prefix for the translation functions, which is used within the templates")
-	fs.StringArrayP("template-keyword", "k", []string{}, "Sets a keyword that is used within templates to identify translation functions")
+func NewExtractor() *Extractor {
+	return &Extractor{
+		cfg:           extractCfg,
+		log:           log.WithField("service", "extractor"),
+		contextLoader: extract.NewContextLoader(extractCfg),
+	}
+}
 
-	fs.StringVarP(&cfg.DefaultDomain, "default-domain", "d", def.DefaultDomain, "Use name.pot for output (instead of messages.pot)")
-	fs.BoolVar(&cfg.WriteNoLocation, "no-location", def.WriteNoLocation, "Do not write '#: filename:line' lines")
+func (e *Extractor) extract() {
+	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Timeout)
+	defer cancel()
 
-	fs.IntVarP(&cfg.WrapWidth, "width", "w", def.WrapWidth, "Set output page width")
-	fs.BoolVar(&cfg.DontWrap, "no-wrap", def.DontWrap, "Do not break long message lines, longer than the output page width, into several lines")
+	extractedIssues, errE := e.runExtraction(ctx)
+	if errE != nil {
+		e.log.Fatalf("Running error: %s", errE)
+	}
 
-	fs.BoolVar(&cfg.OmitHeader, "omit-header", def.OmitHeader, "Don't write header with 'msgid \"\"' entry")
-	fs.StringVar(&cfg.CopyrightHolder, "copyright-holder", def.CopyrightHolder, "Set copyright holder in output")
-	fs.StringVar(&cfg.PackageName, "package-name", def.PackageName, "Set package name in output")
-	fs.StringVar(&cfg.BugsAddress, "msgid-bugs-address", def.BugsAddress, "Set report address for msgid bugs")
+	domainIssues := make(map[string][]result.Issue)
+	for _, iss := range extractedIssues {
+		if _, ok := domainIssues[iss.Domain]; !ok {
+			domainIssues[iss.Domain] = []result.Issue{iss}
+		} else {
+			domainIssues[iss.Domain] = append(domainIssues[iss.Domain], iss)
+		}
+	}
 
-	fs.DurationVar(&cfg.Timeout, "timeout", def.Timeout, "Timeout for total work")
+	if len(extractedIssues) == 0 {
+		domainIssues[""] = make([]result.Issue, 0)
+		log.Println("No Strings found")
+	}
+
+	e.saveDomains(domainIssues)
+}
+
+func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
+	extractorsToRun := []extractors.Extractor{
+		goextractors.NewDefinitionExtractor(),
+		goextractors.NewCommentsExtractor(),
+		goextractors.NewFuncCallExtractor(),
+		goextractors.NewGlobalAssignExtractor(),
+		goextractors.NewSliceDefExtractor(),
+		goextractors.NewMapsDefExtractor(),
+		goextractors.NewStructDefExtractor(),
+		goextractors.NewVariablesExtractor(),
+		goextractors.NewErrorExtractor(),
+		goextractors.NewInlineTemplateExtractor(),
+		tmplextractors.NewCommandExtractor(),
+	}
+
+	extractCtx, err := e.contextLoader.Load(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("context loading failed: %w", err)
+	}
+
+	runner, err := extract.NewRunner(e.cfg, extractCtx.Packages)
+	if err != nil {
+		return nil, err
+	}
+
+	issues, err := runner.Run(ctx, extractCtx, extractorsToRun)
+	if err != nil {
+		return nil, err
+	}
+
+	return issues, nil
+}
+
+func (e *Extractor) saveDomains(domains map[string][]result.Issue) {
+	for domainName, issues := range domains {
+		var outputFile string
+		if domainName == "" {
+			outputFile = filepath.Join(e.cfg.OutputDir, e.cfg.OutputFile)
+		} else {
+			outputFile = filepath.Join(e.cfg.OutputDir, domainName+"."+e.cfg.ExtractFormat)
+		}
+
+		outputDir := filepath.Dir(outputFile)
+		if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+			log.Printf("Output folder does not exist, trying to create it: %s\n", outputDir)
+			if errC := os.MkdirAll(outputDir, os.ModePerm); errC != nil {
+				log.Fatalf("Output folder does not exist and could not be created: %s", errC)
+			}
+		}
+
+		dst, err := os.Create(outputFile)
+		if err != nil {
+			e.log.WithError(err).Fatal("Output file could not be created")
+		}
+		defer dst.Close()
+
+		var enc encoder.Encoder
+		if e.cfg.ExtractFormat == config.ExtractFormatPot {
+			enc = encoder.NewPotEncoder(e.cfg, dst)
+		} else {
+			enc = encoder.NewJSONEncoder(dst, "  ")
+		}
+
+		if errEnc := enc.Encode(issues); errEnc != nil {
+			e.log.WithError(errEnc).Fatal("Output file could not be written")
+		}
+
+		_ = dst.Close()
+		log.Printf("File written: %s\n", outputFile)
+	}
 }

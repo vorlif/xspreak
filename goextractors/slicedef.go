@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
 
@@ -42,7 +43,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 
 		var obj types.Object
 		var pkg *packages.Package
-		var token extractors.TypeToken
+		var token etype.Token
 		switch val := arrayTye.Elt.(type) {
 		case *ast.SelectorExpr:
 			pkg, obj = extractCtx.GetType(val.Sel)
@@ -79,7 +80,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		}
 
 		// Array of strings
-		if token == extractors.TypeSingular {
+		if etype.IsMessageID(token) {
 			for _, elt := range node.Elts {
 				msgID, stringNode := ExtractStringLiteral(elt)
 				if msgID == "" {
@@ -88,6 +89,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 
 				issue := result.Issue{
 					FromExtractor: v.Name(),
+					IDToken:       token,
 					MsgID:         msgID,
 					Pkg:           pkg,
 					Comments:      extractCtx.GetComments(pkg, stringNode, stack),
@@ -100,7 +102,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			return
 		}
 
-		structAttr := extractCtx.Definitions.GetFields(objToKey(obj))
+		structAttr := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
 		if structAttr == nil {
 			return
 		}

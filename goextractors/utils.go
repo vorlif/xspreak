@@ -1,17 +1,11 @@
 package goextractors
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
-	"go/types"
 	"strconv"
 	"strings"
 )
-
-func objToKey(obj types.Object) string {
-	return fmt.Sprintf("%s.%s", obj.Pkg().Path(), obj.Name())
-}
 
 func searchSelector(expr interface{}) *ast.SelectorExpr {
 	switch v := expr.(type) {

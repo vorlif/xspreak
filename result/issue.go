@@ -5,10 +5,13 @@ import (
 	"go/token"
 
 	"golang.org/x/tools/go/packages"
+
+	"github.com/vorlif/xspreak/extract/etype"
 )
 
 type Issue struct {
 	FromExtractor string
+	IDToken       etype.Token
 
 	Domain   string
 	Context  string

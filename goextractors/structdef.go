@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
@@ -51,7 +52,7 @@ func (v structDefExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 			return
 		}
 
-		if structAttr := extractCtx.Definitions.GetFields(objToKey(obj)); structAttr == nil {
+		if structAttr := extractCtx.Definitions.GetFields(util.ObjToKey(obj)); structAttr == nil {
 			return
 		}
 
@@ -75,7 +76,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 		Pos:      extractCtx.GetPosition(node.Pos()),
 		Comments: extractCtx.GetComments(pkg, node, stack),
 	}
-	definitionKey := objToKey(obj)
+	definitionKey := util.ObjToKey(obj)
 	if _, isKv := node.Elts[0].(*ast.KeyValueExpr); isKv {
 		for _, elt := range node.Elts {
 			kve, ok := elt.(*ast.KeyValueExpr)
@@ -98,7 +99,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 				continue
 			}
 
-			if def.Token == extractors.TypeSingular && issue.MsgID != "" {
+			if etype.IsMessageID(def.Token) && issue.MsgID != "" {
 				issues = append(issues, issue)
 				issue = result.Issue{
 					Pkg:      pkg,
@@ -108,13 +109,14 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 			}
 
 			switch def.Token {
-			case extractors.TypeSingular:
+			case etype.Singular, etype.Key, etype.PluralKey:
+				issue.IDToken = def.Token
 				issue.MsgID = raw
-			case extractors.TypePlural:
+			case etype.Plural:
 				issue.PluralID = raw
-			case extractors.TypeContext:
+			case etype.Context:
 				issue.Context = raw
-			case extractors.TypeDomain:
+			case etype.Domain:
 				issue.Domain = raw
 			}
 		}
@@ -130,7 +132,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 					continue
 				}
 
-				if attrDef.Token == extractors.TypeSingular && issue.MsgID != "" {
+				if etype.IsMessageID(attrDef.Token) && issue.MsgID != "" {
 					issues = append(issues, issue)
 					issue = result.Issue{
 						Pkg:      pkg,
@@ -140,13 +142,14 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 				}
 
 				switch attrDef.Token {
-				case extractors.TypeSingular:
+				case etype.Singular, etype.Key, etype.PluralKey:
+					issue.IDToken = attrDef.Token
 					issue.MsgID = raw
-				case extractors.TypePlural:
+				case etype.Plural:
 					issue.PluralID = raw
-				case extractors.TypeContext:
+				case etype.Context:
 					issue.Context = raw
-				case extractors.TypeDomain:
+				case etype.Domain:
 					issue.Domain = raw
 				}
 			}

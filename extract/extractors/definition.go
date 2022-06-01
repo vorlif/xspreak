@@ -5,6 +5,8 @@ import (
 	"go/types"
 
 	"golang.org/x/tools/go/packages"
+
+	"github.com/vorlif/xspreak/extract/etype"
 )
 
 type DefinitionType int
@@ -15,17 +17,6 @@ const (
 	FunctionReturn
 	FunctionParam
 	StructField
-)
-
-type TypeToken string
-
-const (
-	TypeNone     TypeToken = ""
-	TypeSingular TypeToken = "Singular"
-	TypePlural   TypeToken = "Plural"
-	TypeDomain   TypeToken = "Domain"
-	TypeContext  TypeToken = "Context"
-	TypeMessage  TypeToken = "Message"
 )
 
 type Definitions map[string]map[string]*Definition // path.name -> field || "" -> Definition
@@ -56,7 +47,7 @@ func (defs Definitions) GetFields(key string) map[string]*Definition {
 
 type Definition struct {
 	Type  DefinitionType
-	Token TypeToken
+	Token etype.Token
 	Pck   *packages.Package
 	Ident *ast.Ident
 	Path  string // github.com/name/repo/package/pack
@@ -73,12 +64,4 @@ type Definition struct {
 
 func (d *Definition) Key() string {
 	return d.ID
-}
-
-var stringExtractNames = map[string]TypeToken{
-	"MsgID":    TypeSingular,
-	"Singular": TypeSingular,
-	"Plural":   TypePlural,
-	"Domain":   TypeDomain,
-	"Context":  TypeContext,
 }

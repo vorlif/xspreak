@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"time"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
@@ -31,7 +32,7 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 		}
 
 		token, ident := extractCtx.SearchIdentAndToken(node.Lhs[0])
-		if token == extractors.TypeNone {
+		if token == etype.None {
 			return
 		}
 
@@ -40,7 +41,7 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 			return
 		}
 
-		if token == extractors.TypeSingular {
+		if etype.IsMessageID(token) {
 			msgID, stringNode := ExtractStringLiteral(node.Rhs[0])
 			if msgID == "" {
 				return
@@ -48,6 +49,7 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 
 			issue := result.Issue{
 				FromExtractor: v.Name(),
+				IDToken:       token,
 				MsgID:         msgID,
 				Pkg:           pkg,
 				Comments:      extractCtx.GetComments(pkg, stringNode, stack),

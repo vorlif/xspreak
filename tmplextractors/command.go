@@ -84,6 +84,7 @@ func extractArgs(args []parse.Node, keyword *tmpl.Keyword, template *tmpl.Templa
 
 	if stringNode, ok := args[keyword.SingularPos].(*parse.StringNode); ok {
 		iss.MsgID = stringNode.Text
+		iss.IDToken = keyword.IDToken
 		iss.Comments = template.GetComments(args[keyword.SingularPos].Position())
 		iss.Pos = template.Position(args[keyword.SingularPos].Position())
 	} else {

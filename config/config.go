@@ -2,12 +2,18 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/vorlif/xspreak/tmpl"
+)
+
+const (
+	ExtractFormatPot  = "pot"
+	ExtractFormatJSON = "json"
 )
 
 type Config struct {
@@ -37,6 +43,9 @@ type Config struct {
 	Args     []string
 
 	Timeout time.Duration
+
+	ExtractFormat     string
+	TmplIsMonolingual bool
 }
 
 func NewDefault() *Config {
@@ -61,6 +70,8 @@ func NewDefault() *Config {
 
 		MaxDepth: 20,
 		Timeout:  15 * time.Minute,
+
+		ExtractFormat: ExtractFormatPot,
 	}
 }
 
@@ -96,7 +107,7 @@ func (c *Config) Prepare() error {
 		c.OutputDir = filepath.Dir(c.OutputFile)
 		c.OutputFile = filepath.Base(c.OutputFile)
 	} else {
-		c.OutputFile = c.DefaultDomain + ".pot"
+		c.OutputFile = c.DefaultDomain + "." + c.ExtractFormat
 	}
 
 	//nolint:revive
@@ -110,8 +121,15 @@ func (c *Config) Prepare() error {
 		c.WrapWidth = -1
 	}
 
+	if c.ExtractFormat == "po" {
+		c.ExtractFormat = ExtractFormatPot
+	}
+	if c.ExtractFormat != ExtractFormatPot && c.ExtractFormat != ExtractFormatJSON {
+		return fmt.Errorf("only the JSON and pot format is supported, you want %v", c.ExtractFormat)
+	}
+
 	if len(c.TemplatePatterns) > 0 && len(c.Keywords) == 0 {
-		c.Keywords = tmpl.DefaultKeywords("T")
+		c.Keywords = tmpl.DefaultKeywords("T", c.TmplIsMonolingual)
 	}
 
 	return nil

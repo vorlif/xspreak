@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"time"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
@@ -51,7 +52,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 			token := extractCtx.GetLocalizeTypeToken(ident)
 
 			// Array of strings
-			if token == extractors.TypeSingular {
+			if etype.IsMessageID(token) {
 				for _, elt := range node.Elts {
 					kvExpr, isKv := elt.(*ast.KeyValueExpr)
 					if !isKv {
@@ -71,6 +72,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 
 					issue := result.Issue{
 						FromExtractor: v.Name(),
+						IDToken:       token,
 						MsgID:         msgID,
 						Pkg:           pkg,
 						Comments:      extractCtx.GetComments(pkg, stringNode, stack),
@@ -83,7 +85,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 				continue
 			}
 
-			structAttr := extractCtx.Definitions.GetFields(objToKey(obj))
+			structAttr := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
 			if structAttr == nil {
 				return
 			}

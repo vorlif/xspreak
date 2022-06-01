@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"time"
 
+	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
 
@@ -72,7 +73,7 @@ func (de *definitionExtractorRunner) extractVar(decl *ast.GenDecl) {
 		}
 
 		tok := de.extractCtx.GetLocalizeTypeToken(selector)
-		if tok != extractors.TypeSingular {
+		if tok != etype.Singular {
 			// TODO(fv): log hint
 			continue
 		}
@@ -89,7 +90,7 @@ func (de *definitionExtractorRunner) extractVar(decl *ast.GenDecl) {
 				Pck:   pkg,
 				Ident: name,
 				Path:  obj.Pkg().Path(),
-				ID:    objToKey(obj),
+				ID:    util.ObjToKey(obj),
 				Obj:   obj,
 			}
 
@@ -129,7 +130,7 @@ func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 
 		for i, field := range structType.Fields.List {
 
-			var tok extractors.TypeToken
+			var tok etype.Token
 			switch field.Type.(type) {
 			case *ast.Ident:
 				if pkg.PkgPath == config.SpreakLocalizePackagePath {
@@ -149,7 +150,7 @@ func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 				}
 			}
 
-			if tok == extractors.TypeNone {
+			if tok == etype.None {
 				continue
 			}
 
@@ -160,7 +161,7 @@ func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 					Pck:        pkg,
 					Ident:      typeSpec.Name,
 					Path:       obj.Pkg().Path(),
-					ID:         objToKey(obj),
+					ID:         util.ObjToKey(obj),
 					Obj:        obj,
 					FieldIdent: fieldName,
 					FieldName:  fieldName.Name,
@@ -197,7 +198,7 @@ func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
 			}
 
 			tok := de.extractCtx.GetLocalizeTypeToken(selector)
-			if tok == extractors.TypeNone || tok == extractors.TypeMessage {
+			if tok == etype.None || tok == etype.Message {
 				continue
 			}
 
@@ -208,7 +209,7 @@ func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
 					Pck:        pck,
 					Ident:      decl.Name,
 					Path:       obj.Pkg().Path(),
-					ID:         objToKey(obj),
+					ID:         util.ObjToKey(obj),
 					Obj:        obj,
 					FieldIdent: name,
 					FieldName:  name.Name,

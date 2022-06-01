@@ -17,7 +17,7 @@ func TestInlineExtraction(t *testing.T) {
 	cfg := config.NewDefault()
 	cfg.SourceDir = testdataDir
 	cfg.ExtractErrors = true
-	cfg.Keywords = tmpl.DefaultKeywords("T")
+	cfg.Keywords = tmpl.DefaultKeywords("T", false)
 	require.NoError(t, cfg.Prepare())
 	ctx := context.Background()
 	contextLoader := extract.NewContextLoader(cfg)
