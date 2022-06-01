@@ -48,7 +48,7 @@ func main() {
 ## Requirements
 
 * Your project must be a go module (must have a `go.mod` and `go.sum`)
-* The dependencies must be installed `go mod tidy`
+* The dependencies of your project must be installed `go mod tidy`
 
 ## How to install
 
