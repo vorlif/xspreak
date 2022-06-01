@@ -3,12 +3,11 @@ xspreak is the command line program for extracting strings for the [spreak libra
 # xspreak ![Test status](https://github.com/vorlif/xspreak/workflows/Test/badge.svg) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 
-xspreak automatically extracts strings that use a string alias from the localize package.
-The extracted strings are stored in a `.pot` file and can then be easily translated.
-The translation produces `.po` or `.mo` files which are used by spreak for looking up translations.
+xspreak automatically extracts strings that use a string alias from the [`localize` package](https://pkg.go.dev/github.com/vorlif/spreak/localize).
+The extracted strings are stored in a `.pot` or `.json` file and can then be easily translated.
 
 The extracted strings can then be passed to a [Localizer](https://pkg.go.dev/github.com/vorlif/spreak#Localizer) 
-or a [Locale](https://pkg.go.dev/github.com/vorlif/spreak#Locale) which returns the matching translation.
+or a [KeyLocalizer](https://pkg.go.dev/github.com/vorlif/spreak#KeyLocalizer) which returns the matching translation.
 
 Example:
 
@@ -48,11 +47,12 @@ func main() {
 
 ## Requirements
 
-* Your project must be a go module (must have a go.mod and go.sum)
+* Your project must be a go module (must have a `go.mod` and `go.sum`)
+* The dependencies must be installed `go mod tidy`
 
 ## How to install
 
-Download the [pre-built binary from the releases](https://github.com/vorlif/xspreak/releases/latest) or create it from source:
+Download a [pre-built binary from the releases](https://github.com/vorlif/xspreak/releases/latest) or create it from source:
 
 ```bash
 go install github.com/vorlif/xspreak@latest
@@ -77,8 +77,8 @@ t.Nget("Hello world", "Hello worlds")
 
 ### Global variables and constants
 
-Global variables and constants are extracted if the type is localize.Singular or localize.MsgID.
-Thereby localize.Singular and localize.MsgID are always equivalent and can be used synonymously.
+Global variables and constants are extracted if the type is `localize.Singular` or `localize.MsgID`.
+Thereby `localize.Singular` and `localize.MsgID` are always equivalent and can be used synonymously.
 
 ```go
 package main
@@ -91,7 +91,7 @@ var ApplicationName localize.Singular = "app"
 ```
 
 ### Local variables
-Local variables are extracted if the type is localize.Singular or localize.MsgID.
+Local variables are extracted if the type is `localize.Singular` or `localize.MsgID`.
 
 ```go
 package main
@@ -105,7 +105,7 @@ func init() {
 
 ### Variable assignments
 
-Assignments to variables are extracted if the type is localize.Singular or localize.MsgID.
+Assignments to variables are extracted if the type is `localize.Singular` or `localize.MsgID`.
 
 ```go
 package main
@@ -125,9 +125,9 @@ func init() {
 
 ### Argument of function calls
 
-Function calls to **global functions** are extracted if the parameter type is from the localize package.
+Function calls to **global functions** are extracted if the parameter type is from the `localize` package.
 The parameters of a function are grouped together to form a message.
-Thus a message can be created with singular, plural, a context and a domain.
+Thus, a message can be created with singular, plural, a context and a domain.
 
 ```go
 package main
@@ -145,9 +145,9 @@ func init() {
 ### Attributes at struct initialization
 
 Struct initializations are extracted if the struct was **defined globally** and
-the attribute type *comes from the localize package*.
+the attribute type *comes from the `localize` package*.
 The attributes of a struct are grouped together to create a message.
-Thus a message can be created with singular, plural, a context and a domain.
+Thus, a message can be created with singular, plural, a context and a domain.
 
 ```go
 package main
@@ -175,8 +175,8 @@ func main() {
 
 ### Values from an array initialization
 
-Arrays are extracted if the type is localize.Singular or a struct that contains parameter
-types from the localize package.
+Arrays are extracted if the type is `localize.Singular` or a struct that contains parameter
+types from the `localize` package.
 
 ```go
 package main
@@ -203,7 +203,7 @@ func main() {
 ### Values from an map initialization
 
 During map initialization keys and values are extracted,
-if the type is localize.Singular or a struct that contains parameter types from the localize package.
+if the type is `localize.Singular` or a struct that contains parameter types from the `localize` package.
 
 ```go
 package main
@@ -239,6 +239,7 @@ var ErrInvalidAnimal = errors.New("this is not a valid animal")
 
 Comments can be left for translators.
 These are extracted, stored in the `.pot` file and displayed to the translator.
+For JSON files the comments are ignored.
 
 ```go
 package main
