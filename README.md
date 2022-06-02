@@ -310,9 +310,9 @@ const tmpl = `{{.T.Get "Hello"}}`
 There is also a [detailed example](https://github.com/vorlif/spreak/tree/main/examples/features/httptempl) how to use
 spreak with templates and your own keywords.
 
-### Using Key-Value
+### Using monolingual format (e.g. Key-Value)
 
-To use Key-Value, the following changes must be made.
+To use monolingual format, the following changes must be made.
 
 1. Instead of `localize.Singular` and `localize.MsgID` use `localize.Key`.
 2. If a key also has a plural form, `localize.PluralKey` must be used.
