@@ -42,21 +42,19 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 		}
 
 		if etype.IsMessageID(token) {
-			msgID, stringNode := ExtractStringLiteral(node.Rhs[0])
-			if msgID == "" {
-				return
+			for _, res := range extractCtx.SearchStrings(node.Rhs[0]) {
+				issue := result.Issue{
+					FromExtractor: v.Name(),
+					IDToken:       token,
+					MsgID:         res.Raw,
+					Pkg:           pkg,
+					Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+					Pos:           extractCtx.GetPosition(res.Node.Pos()),
+				}
+
+				issues = append(issues, issue)
 			}
 
-			issue := result.Issue{
-				FromExtractor: v.Name(),
-				IDToken:       token,
-				MsgID:         msgID,
-				Pkg:           pkg,
-				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-				Pos:           extractCtx.GetPosition(node.Rhs[0].Pos()),
-			}
-
-			issues = append(issues, issue)
 			return
 		}
 

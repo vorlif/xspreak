@@ -57,6 +57,7 @@ type Definition struct {
 	// only for functions and structs
 	FieldIdent *ast.Ident
 	FieldName  string
+	IsVariadic bool
 
 	// functions only
 	FieldPos int

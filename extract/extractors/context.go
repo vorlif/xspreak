@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"strconv"
 	"strings"
 	"time"
 
@@ -191,6 +192,51 @@ func (c *Context) SearchIdentAndToken(start ast.Node) (etype.Token, *ast.Ident) 
 	return etype.None, nil
 }
 
+type SearchResult struct {
+	Raw  string
+	Node ast.Node
+}
+
+func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
+	results := make([]*SearchResult, 0)
+
+	extracted, originNode := ExtractStringLiteral(startExpr)
+	if extracted != "" {
+		results = append(results, &SearchResult{Raw: extracted, Node: originNode})
+	}
+
+	startIdent, ok := startExpr.(*ast.Ident)
+	if !ok || startIdent.Obj == nil {
+		return results
+	}
+	mainMessage := extracted
+	c.Inspector.WithStack([]ast.Node{&ast.AssignStmt{}}, func(raw ast.Node, push bool, stack []ast.Node) (proceed bool) {
+		proceed = false
+
+		node := raw.(*ast.AssignStmt)
+		if len(node.Lhs) != len(node.Rhs) || len(node.Lhs) == 0 {
+			return
+		}
+		for i, left := range node.Lhs {
+			leftIdent, isIdent := left.(*ast.Ident)
+			if !isIdent {
+				continue
+			}
+			if leftIdent.Obj != startIdent.Obj {
+				continue
+			}
+			extracted, originNode = ExtractStringLiteral(node.Rhs[i])
+			if extracted != "" && extracted != mainMessage {
+				results = append(results, &SearchResult{Raw: extracted, Node: originNode})
+			}
+
+		}
+		return
+	})
+
+	return results
+}
+
 func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.Node) []string {
 	if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
 		return nil
@@ -284,6 +330,60 @@ func searchSelector(expr interface{}) *ast.SelectorExpr {
 		return searchSelector(v.Type)
 	case *ast.Field:
 		return searchSelector(v.Type)
+	case *ast.Ellipsis:
+		return searchSelector(v.Elt)
 	}
 	return nil
+}
+
+func ExtractStringLiteral(expr ast.Expr) (string, ast.Node) {
+	stack := []ast.Expr{expr}
+	var b strings.Builder
+
+	for len(stack) != 0 {
+		n := len(stack) - 1
+		elem := stack[n]
+		stack = stack[:n]
+
+		switch v := elem.(type) {
+		//  Simple string with quotes or backqoutes
+		case *ast.BasicLit:
+			if v.Kind != token.STRING {
+				return "", v
+			}
+
+			if unqouted, err := strconv.Unquote(v.Value); err != nil {
+				b.WriteString(v.Value)
+			} else {
+				b.WriteString(unqouted)
+			}
+		// Concatenation of several string literals
+		case *ast.BinaryExpr:
+			if v.Op != token.ADD {
+				return "", v
+			}
+			stack = append(stack, v.Y, v.X)
+		case *ast.Ident:
+			if v.Obj == nil {
+				return "", v
+			}
+			switch z := v.Obj.Decl.(type) {
+			case *ast.ValueSpec:
+				if len(z.Values) == 0 {
+					return "", v
+				}
+				stack = append(stack, z.Values[0])
+			case *ast.AssignStmt:
+				if len(z.Rhs) == 0 {
+					return "", v
+				}
+				stack = append(stack, z.Rhs...)
+			}
+		default:
+			return "", nil
+		}
+	}
+
+	result := b.String()
+	return result, expr
 }

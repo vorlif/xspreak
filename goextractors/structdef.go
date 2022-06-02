@@ -94,7 +94,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 				continue
 			}
 
-			raw, stringNode := ExtractStringLiteral(kve.Value)
+			raw, stringNode := extractors.ExtractStringLiteral(kve.Value)
 			if raw == "" {
 				continue
 			}
@@ -127,7 +127,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 					continue
 				}
 
-				raw, stringNode := ExtractStringLiteral(elt)
+				raw, stringNode := extractors.ExtractStringLiteral(elt)
 				if raw == "" {
 					continue
 				}

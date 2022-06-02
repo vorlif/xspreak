@@ -13,6 +13,7 @@ func TestVariablesExtractorRun(t *testing.T) {
 	want := []string{
 		"Bob", "Bobby", "application", "john", "doe", "assign function param", "struct attr assign",
 		"Newline remains\n", "This is an\nmultiline string",
+		"backtrace init", "backtrace assign",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)

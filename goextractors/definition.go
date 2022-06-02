@@ -4,6 +4,7 @@ import (
 	"context"
 	"go/ast"
 	"go/token"
+	"strconv"
 	"time"
 
 	"github.com/vorlif/xspreak/extract/etype"
@@ -188,18 +189,27 @@ func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
 
 	if decl.Type.Params != nil {
 		for i, param := range decl.Type.Params.List {
-			if len(param.Names) == 0 {
-				continue
-			}
-
-			selector := searchSelector(param)
-			if selector == nil {
-				continue
-			}
-
-			tok := de.extractCtx.GetLocalizeTypeToken(selector)
+			tok, _ := de.extractCtx.SearchIdentAndToken(param)
 			if tok == etype.None || tok == etype.Message {
 				continue
+			}
+
+			if len(param.Names) == 0 {
+				def := &extractors.Definition{
+					Type:       extractors.FunctionParam,
+					Token:      tok,
+					Pck:        pck,
+					Ident:      decl.Name,
+					Path:       obj.Pkg().Path(),
+					ID:         util.ObjToKey(obj),
+					Obj:        obj,
+					FieldIdent: nil,
+					FieldName:  strconv.Itoa(i),
+
+					FieldPos:   i,
+					IsVariadic: isEllipsis(param.Type),
+				}
+				de.addDefinition(def)
 			}
 
 			for ii, name := range param.Names {
@@ -213,6 +223,7 @@ func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
 					Obj:        obj,
 					FieldIdent: name,
 					FieldName:  name.Name,
+					IsVariadic: isEllipsis(param.Type),
 
 					FieldPos: calculatePosIdx(i, ii),
 				}
@@ -229,4 +240,13 @@ func (de *definitionExtractorRunner) addDefinition(d *extractors.Definition) {
 	}
 
 	de.extractCtx.Definitions[key][d.FieldName] = d
+}
+
+func isEllipsis(node ast.Node) bool {
+	switch node.(type) {
+	case *ast.Ellipsis:
+		return true
+	default:
+		return false
+	}
 }

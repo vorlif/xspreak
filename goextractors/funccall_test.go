@@ -24,6 +24,10 @@ func TestFuncCallExtractor(t *testing.T) {
 		"domain-dnp", "context-dnp", "msgid-dnp", "pluralid-dnp",
 		"submsgid", "subplural", "foo test",
 		"generic-call",
+		"pre-variadic", "variadic-a", "variadic-b",
+		"no-param-msgid", "no-param-plural",
+		"multi-names-a", "multi-names-b",
+		"init backtrace", "assign backtrace",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)

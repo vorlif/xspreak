@@ -47,7 +47,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 			return
 		}
 
-		msgID, _ := ExtractStringLiteral(node.Args[0])
+		msgID, msgNode := extractors.ExtractStringLiteral(node.Args[0])
 		if msgID == "" {
 			return
 		}
@@ -58,7 +58,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 			Pkg:           pkg,
 			Context:       extractCtx.Config.ErrorContext,
 			Comments:      extractCtx.GetComments(pkg, node, stack),
-			Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
+			Pos:           extractCtx.GetPosition(msgNode.Pos()),
 		}
 
 		issues = append(issues, issue)

@@ -65,21 +65,18 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 						target = kvExpr.Value
 					}
 
-					msgID, stringNode := ExtractStringLiteral(target)
-					if msgID == "" {
-						continue
-					}
+					for _, res := range extractCtx.SearchStrings(target) {
+						issue := result.Issue{
+							FromExtractor: v.Name(),
+							IDToken:       token,
+							MsgID:         res.Raw,
+							Pkg:           pkg,
+							Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+							Pos:           extractCtx.GetPosition(res.Node.Pos()),
+						}
 
-					issue := result.Issue{
-						FromExtractor: v.Name(),
-						IDToken:       token,
-						MsgID:         msgID,
-						Pkg:           pkg,
-						Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-						Pos:           extractCtx.GetPosition(stringNode.Pos()),
+						issues = append(issues, issue)
 					}
-
-					issues = append(issues, issue)
 				}
 
 				continue

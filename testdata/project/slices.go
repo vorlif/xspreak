@@ -35,7 +35,10 @@ var globalStructSlice = []localize.Message{
 func localSliceFunc() []string {
 	globalSlice = append(globalSlice, "five")
 
-	localSlice := []localize.Singular{"six", "seven", "eight", "nine"}
+	backtrace := "backtrace init"
+	backtrace = "backtrace assign"
+
+	localSlice := []localize.Singular{"six", "seven", "eight", "nine", backtrace}
 	localSlice = append(localSlice, "ten")
 
 	_ = []localize.Message{

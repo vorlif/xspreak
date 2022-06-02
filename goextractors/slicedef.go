@@ -82,21 +82,18 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		// Array of strings
 		if etype.IsMessageID(token) {
 			for _, elt := range node.Elts {
-				msgID, stringNode := ExtractStringLiteral(elt)
-				if msgID == "" {
-					continue
-				}
+				for _, res := range extractCtx.SearchStrings(elt) {
+					issue := result.Issue{
+						FromExtractor: v.Name(),
+						IDToken:       token,
+						MsgID:         res.Raw,
+						Pkg:           pkg,
+						Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+						Pos:           extractCtx.GetPosition(res.Node.Pos()),
+					}
 
-				issue := result.Issue{
-					FromExtractor: v.Name(),
-					IDToken:       token,
-					MsgID:         msgID,
-					Pkg:           pkg,
-					Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-					Pos:           extractCtx.GetPosition(stringNode.Pos()),
+					issues = append(issues, issue)
 				}
-
-				issues = append(issues, issue)
 			}
 
 			return

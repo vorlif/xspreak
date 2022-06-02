@@ -10,18 +10,21 @@ import (
 	alias "github.com/vorlif/spreak/localize"
 )
 
-func noop(sing alias.MsgID, plural alias.Plural, context alias.Context, domain alias.Domain) {
-
-}
+func noop(sing alias.MsgID, plural alias.Plural, context alias.Context, domain alias.Domain) {}
+func noParamNames(alias.MsgID, alias.Plural)                                                 {}
+func variadicFunc(a alias.Singular, vars ...alias.Singular)                                  {}
+func multiNamesFunc(a, b alias.MsgID)                                                        {}
 
 func GenericFunc[V int64 | float64](log alias.Singular, i V) V {
 	return i
 }
 
 func outerFuncDef() {
-	f := func(msgid alias.Singular, plural alias.Plural, context alias.Context, domain alias.Domain) {
+	f := func(msgid alias.Singular, plural alias.Plural, context alias.Context, domain alias.Domain) {}
 
-	}
+	variadicFunc("pre-variadic", "variadic-a", "variadic-b")
+	noParamNames("no-param-msgid", "no-param-plural")
+	multiNamesFunc("multi-names-a", "multi-names-b")
 
 	// not extracted
 	f("f-msgid", "f-plural", "f-context", "f-domain")
@@ -36,6 +39,13 @@ func outerFuncDef() {
 func localizerCall(loc *sp.Localizer) {
 	// TRANSLATORS: this is extracted
 	loc.Getf("localizer func call")
+
+	initBacktrace := "init backtrace"
+	loc.Get(initBacktrace)
+
+	var assignBacktrace string
+	assignBacktrace = "assign backtrace"
+	loc.Get(assignBacktrace)
 }
 
 func builtInFunctions() {

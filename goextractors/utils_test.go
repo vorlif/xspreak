@@ -3,6 +3,8 @@ package goextractors
 import (
 	"go/parser"
 	"testing"
+
+	"github.com/vorlif/xspreak/extract/extractors"
 )
 
 func TestExtractStringLiteral(t *testing.T) {
@@ -49,18 +51,18 @@ func TestExtractStringLiteral(t *testing.T) {
 			if err != nil {
 				t.Errorf("Expression %s could not be parsed: %v", tt.code, expr)
 			}
-			extractedStr, found := ExtractStringLiteral(expr)
+			extractedStr, found := extractors.ExtractStringLiteral(expr)
 			if extractedStr != tt.wantStr {
 				t.Errorf("ExtractStringLiteral() string = %v, want %v", extractedStr, tt.wantStr)
 			}
 			if (found == nil) == tt.wantFound {
-				t.Errorf("ExtractStringLiteral() got1 = %v, want %v", found, (found == nil))
+				t.Errorf("ExtractStringLiteral() got1 = %v, want %v", found, found == nil)
 			}
 		})
 	}
 
 	t.Run("Nil is ignored", func(t *testing.T) {
-		extractedStr, found := ExtractStringLiteral(nil)
+		extractedStr, found := extractors.ExtractStringLiteral(nil)
 		if extractedStr != "" {
 			t.Errorf("ExtractStringLiteral() string = %v, want %v", extractedStr, "")
 		}

@@ -1,12 +1,16 @@
 package main
 
-import alias "github.com/vorlif/spreak/localize"
+import (
+	alias "github.com/vorlif/spreak/localize"
+)
 
 //goland:noinspection GoVarAndConstTypeMayBeOmitted
 // TRANSLATORS: Name of the app
-var applicationName alias.Singular = "app"
+var applicationName = "app"
 
 var ignored = "no localize assign global"
+
+var backtrace = "backtrace"
 
 const (
 	// TRANSLATORS: Weekday

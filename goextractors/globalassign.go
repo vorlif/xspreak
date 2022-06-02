@@ -50,20 +50,17 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 		}
 
 		for _, value := range node.Values {
-			msgID, stringNode := ExtractStringLiteral(value)
-			if msgID == "" {
-				return
-			}
+			for _, res := range extractCtx.SearchStrings(value) {
+				issue := result.Issue{
+					FromExtractor: v.Name(),
+					MsgID:         res.Raw,
+					Pkg:           pkg,
+					Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+					Pos:           extractCtx.GetPosition(res.Node.Pos()),
+				}
 
-			issue := result.Issue{
-				FromExtractor: v.Name(),
-				MsgID:         msgID,
-				Pkg:           pkg,
-				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-				Pos:           extractCtx.GetPosition(value.Pos()),
+				issues = append(issues, issue)
 			}
-
-			issues = append(issues, issue)
 		}
 
 		return

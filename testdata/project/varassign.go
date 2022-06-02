@@ -29,4 +29,8 @@ func (assignStruct) testAssign() string {
 
 func assignFunc(singular alias.Singular) {
 	singular = "assign function param"
+
+	backtraceAssign := "backtrace init"
+	backtraceAssign = "backtrace assign"
+	singular = backtraceAssign
 }

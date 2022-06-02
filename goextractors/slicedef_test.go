@@ -21,6 +21,7 @@ func TestSliceDefExtractor(t *testing.T) {
 		"A1", "B1", "C1",
 		"A2", "B2", "C2",
 		"struct slice msgid", "struct slice plural",
+		"backtrace init", "backtrace assign",
 	}
 	assert.ElementsMatch(t, want, got)
 }

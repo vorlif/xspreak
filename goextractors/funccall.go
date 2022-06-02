@@ -57,7 +57,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		}
 
 		if tok := extractCtx.GetLocalizeTypeToken(ident); etype.IsMessageID(tok) {
-			raw, stringNode := ExtractStringLiteral(node.Args[0])
+			raw, stringNode := extractors.ExtractStringLiteral(node.Args[0])
 			if raw == "" {
 				return
 			}
@@ -68,7 +68,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 				MsgID:         raw,
 				Pkg:           pkg,
 				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-				Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
+				Pos:           extractCtx.GetPosition(stringNode.Pos()),
 			}
 
 			issues = append(issues, issue)
@@ -87,24 +87,32 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		}
 		for _, def := range funcParameterDefs {
 			for i, arg := range node.Args {
-				if def.FieldPos != i {
+				if (def.FieldPos != i) && !(i >= def.FieldPos && def.IsVariadic) {
 					continue
 				}
 
-				raw, _ := ExtractStringLiteral(arg)
-				if raw == "" {
-					return
-				}
-				switch def.Token {
-				case etype.Singular, etype.Key, etype.PluralKey:
-					issue.IDToken = def.Token
-					issue.MsgID = raw
-				case etype.Plural:
-					issue.PluralID = raw
-				case etype.Context:
-					issue.Context = raw
-				case etype.Domain:
-					issue.Domain = raw
+				for _, res := range extractCtx.SearchStrings(arg) {
+					switch def.Token {
+					case etype.Singular, etype.Key, etype.PluralKey:
+						if issue.MsgID != "" {
+							issues = append(issues, issue)
+							issue = result.Issue{
+								FromExtractor: v.Name(),
+								Pkg:           pkg,
+								Comments:      extractCtx.GetComments(pkg, node.Args[0], stack),
+							}
+						}
+
+						issue.Pos = extractCtx.GetPosition(res.Node.Pos())
+						issue.IDToken = def.Token
+						issue.MsgID = res.Raw
+					case etype.Plural:
+						issue.PluralID = res.Raw
+					case etype.Context:
+						issue.Context = res.Raw
+					case etype.Domain:
+						issue.Domain = res.Raw
+					}
 				}
 			}
 		}
