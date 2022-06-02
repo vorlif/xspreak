@@ -4,9 +4,9 @@ import (
 	alias "github.com/vorlif/spreak/localize"
 )
 
-//goland:noinspection GoVarAndConstTypeMayBeOmitted
 // TRANSLATORS: Name of the app
-var applicationName = "app"
+//goland:noinspection GoVarAndConstTypeMayBeOmitted
+var applicationName alias.Singular = "app"
 
 var ignored = "no localize assign global"
 
