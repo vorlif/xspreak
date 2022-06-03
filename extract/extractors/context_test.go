@@ -1,10 +1,8 @@
-package goextractors
+package extractors
 
 import (
 	"go/parser"
 	"testing"
-
-	"github.com/vorlif/xspreak/extract/extractors"
 )
 
 func TestExtractStringLiteral(t *testing.T) {
@@ -44,6 +42,18 @@ func TestExtractStringLiteral(t *testing.T) {
 			wantStr:   "This is an multiline\nstring",
 			wantFound: true,
 		},
+		{
+			name:      "Backqoutes with qoutes",
+			code:      "`This is an \"Test\" abc`",
+			wantStr:   "This is an \\\"Test\\\" abc",
+			wantFound: true,
+		},
+		{
+			name:      "Backqoutes with qoutes",
+			code:      `"This is an \"Test\" abc"`,
+			wantStr:   "This is an \\\"Test\\\" abc",
+			wantFound: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,7 +61,7 @@ func TestExtractStringLiteral(t *testing.T) {
 			if err != nil {
 				t.Errorf("Expression %s could not be parsed: %v", tt.code, expr)
 			}
-			extractedStr, found := extractors.ExtractStringLiteral(expr)
+			extractedStr, found := ExtractStringLiteral(expr)
 			if extractedStr != tt.wantStr {
 				t.Errorf("ExtractStringLiteral() string = %v, want %v", extractedStr, tt.wantStr)
 			}
@@ -62,7 +72,7 @@ func TestExtractStringLiteral(t *testing.T) {
 	}
 
 	t.Run("Nil is ignored", func(t *testing.T) {
-		extractedStr, found := extractors.ExtractStringLiteral(nil)
+		extractedStr, found := ExtractStringLiteral(nil)
 		if extractedStr != "" {
 			t.Errorf("ExtractStringLiteral() string = %v, want %v", extractedStr, "")
 		}

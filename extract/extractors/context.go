@@ -384,6 +384,25 @@ func ExtractStringLiteral(expr ast.Expr) (string, ast.Node) {
 		}
 	}
 
-	result := b.String()
+	result := prepareString(b.String())
 	return result, expr
+}
+
+func prepareString(s string) string {
+	var b strings.Builder
+
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString(`\\`)
+		case '"':
+			b.WriteString(`\"`)
+		case '\t':
+			b.WriteString(`\t`)
+		default:
+			b.WriteRune(r)
+		}
+	}
+
+	return b.String()
 }
