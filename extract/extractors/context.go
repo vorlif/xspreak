@@ -393,12 +393,8 @@ func prepareString(s string) string {
 
 	for _, r := range s {
 		switch r {
-		case '\\':
-			b.WriteString(`\\`)
 		case '"':
 			b.WriteString(`\"`)
-		case '\t':
-			b.WriteString(`\t`)
 		default:
 			b.WriteRune(r)
 		}

@@ -54,6 +54,12 @@ func TestExtractStringLiteral(t *testing.T) {
 			wantStr:   "This is an \\\"Test\\\" abc",
 			wantFound: true,
 		},
+		{
+			name:      "Escaping",
+			code:      `"\\caf\u00e9"`,
+			wantStr:   `\café`,
+			wantFound: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
