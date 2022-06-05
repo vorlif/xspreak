@@ -2,11 +2,11 @@ xspreak is the command line program for extracting strings for the [spreak libra
 
 # xspreak ![Test status](https://github.com/vorlif/xspreak/workflows/Test/badge.svg) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-
-xspreak automatically extracts strings that use a string alias from the [`localize` package](https://pkg.go.dev/github.com/vorlif/spreak/localize).
+xspreak automatically extracts strings that use a string alias from
+the [`localize` package](https://pkg.go.dev/github.com/vorlif/spreak/localize).
 The extracted strings are stored in a `.pot` or `.json` file and can then be easily translated.
 
-The extracted strings can then be passed to a [Localizer](https://pkg.go.dev/github.com/vorlif/spreak#Localizer) 
+The extracted strings can then be passed to a [Localizer](https://pkg.go.dev/github.com/vorlif/spreak#Localizer)
 or a [KeyLocalizer](https://pkg.go.dev/github.com/vorlif/spreak#KeyLocalizer) which returns the matching translation.
 
 Example:
@@ -53,13 +53,15 @@ func main() {
 
 ## How to install
 
-Download a [pre-built binary from the releases](https://github.com/vorlif/xspreak/releases/latest) or create it from source:
+Download a [pre-built binary from the releases](https://github.com/vorlif/xspreak/releases/latest) or create it from
+source:
 
 ```bash
 go install github.com/vorlif/xspreak@latest
 ```
 
 Tests installation with:
+
 ```bash
 xspreak --help
 ```
@@ -92,6 +94,7 @@ var ApplicationName localize.Singular = "app"
 ```
 
 ### Local variables
+
 Local variables are extracted if the type is `localize.Singular` or `localize.MsgID`.
 
 ```go
@@ -229,14 +232,14 @@ package main
 
 import "github.com/vorlif/spreak/localize"
 
-var weekdays = map[localize.MsgID]int {
-	"Monday": 1,
+var weekdays = map[localize.MsgID]int{
+	"Monday":  1,
 	"Tuesday": 2,
 }
 
-var reverseWeekdays = map[int]localize.Singular {
-  1: "Monday",
-  2: "Tuesday",
+var reverseWeekdays = map[int]localize.Singular{
+	1: "Monday",
+	2: "Tuesday",
 }
 
 ```
@@ -290,8 +293,8 @@ const MagicName localize.Singular = ".%$($§($(%"
 With `-t` a template directory can be specified.
 
 * `-t "path/to/templates/*.html"`: Scans all HTML files in the `templates` directory
-* `-t "path/to/templates/**/*.html"` Scans all HTML files in the `templates` directory 
-and in subdirectories of the templates directory.
+* `-t "path/to/templates/**/*.html"` Scans all HTML files in the `templates` directory
+  and in subdirectories of the templates directory.
 
 With `--template-prefix` you can specify a prefix for the template function.
 
@@ -303,17 +306,19 @@ For example, with `--template-prefix "T"` the following function calls are extra
 ```
 
 Two messages are extracted here:
-* Message 1
-  * Singular `Hello world`
-* Message 2
-  * Singular `I see a planet`
-  * Plural `I see planets`
 
-Instead of `--template-prefix` you can also use `-k` to define your own keywords. 
-The definition follows the [xgettext notation](https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html), 
+* Message 1
+    * Singular `Hello world`
+* Message 2
+    * Singular `I see a planet`
+    * Plural `I see planets`
+
+Instead of `--template-prefix` you can also use `-k` to define your own keywords.
+The definition follows
+the [xgettext notation](https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html),
 but only applies to templates.
 
-The default is: `.T.Get .T.Getf .T.DGet:1d,2 .T.DGetf:1d,2 .T.NGet:1,2 .T.NGetf:1,2 .T.DNGet:1d,2,3 .T.DNGetf:1d,2,3 
+The default is: `.T.Get .T.Getf .T.DGet:1d,2 .T.DGetf:1d,2 .T.NGet:1,2 .T.NGetf:1,2 .T.DNGet:1d,2,3 .T.DNGetf:1d,2,3
 .T.PGet:1c,2 .T.PGetf:1c,2 .T.DPGet:1d,2c,3 .T.DPGetf:1d,2c,3 .T.NPGet:1c,2,3 .T.NPGetf:1c,2,3 .T.DNPGet:1d,2c,3,4
 .T.DNPGetf:1d,2c,3,4`
 
@@ -335,12 +340,16 @@ For `localize.Singular` and `localize.MsgID`, variable tracing is supported for 
 The following example extracts two strings. One string with "Yes" and one string with "No, better a beer".
 
 ```go
+package main
+
+import "github.com/vorlif/spreak/localize"
+
 func WantCoffee() localize.Singular {
 	answer := "Yes"
-	
+
 	switch time.Now().Weekday() {
 	case time.Friday, time.Saturday, time.Sunday:
-        answer = "No, better a beer"
+		answer = "No, better a beer"
 	}
 
 	return answer
@@ -363,7 +372,7 @@ To use monolingual format, the following changes must be made.
    ```
 
 All of the above functions also apply to `localize.Key` and `localize.PluralKey`.
-   
+
 5. Use [KeyLocalizer](https://pkg.go.dev/github.com/vorlif/spreak#KeyLocalizer) instead of Localizer in the code
 
 ### Supported export formats
