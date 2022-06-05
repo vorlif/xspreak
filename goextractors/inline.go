@@ -58,7 +58,7 @@ func (i *inlineTemplateExtractor) Run(_ context.Context, extractCtx *extractors.
 			return
 		}
 
-		comments := extractCtx.GetComments(pkg, node, stack)
+		comments := extractCtx.GetComments(pkg, node)
 		if comments == nil {
 			return
 		}

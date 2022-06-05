@@ -187,6 +187,7 @@ func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
 		return
 	}
 
+	// function call
 	if decl.Type.Params != nil {
 		for i, param := range decl.Type.Params.List {
 			tok, _ := de.extractCtx.SearchIdentAndToken(param)

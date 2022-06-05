@@ -21,11 +21,12 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 	util.TrackTime(time.Now(), "extract var assign")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.AssignStmt{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.AssignStmt{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
 		}
+
 		node := rawNode.(*ast.AssignStmt)
 		if len(node.Lhs) == 0 || len(node.Rhs) == 0 {
 			return
@@ -48,14 +49,12 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 					IDToken:       token,
 					MsgID:         res.Raw,
 					Pkg:           pkg,
-					Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+					Comments:      extractCtx.GetComments(pkg, res.Node),
 					Pos:           extractCtx.GetPosition(res.Node.Pos()),
 				}
 
 				issues = append(issues, issue)
 			}
-
-			return
 		}
 
 		return

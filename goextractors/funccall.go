@@ -21,7 +21,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 	util.TrackTime(time.Now(), "extract func calls")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.CallExpr{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.CallExpr{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
@@ -56,22 +56,21 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			return
 		}
 
+		// type conversions, e.g. localize.Singular("init")
 		if tok := extractCtx.GetLocalizeTypeToken(ident); etype.IsMessageID(tok) {
-			raw, stringNode := extractors.ExtractStringLiteral(node.Args[0])
-			if raw == "" {
-				return
+			for _, res := range extractCtx.SearchStrings(node.Args[0]) {
+				issue := result.Issue{
+					FromExtractor: v.Name(),
+					IDToken:       tok,
+					MsgID:         res.Raw,
+					Pkg:           pkg,
+					Comments:      extractCtx.GetComments(pkg, res.Node),
+					Pos:           extractCtx.GetPosition(res.Node.Pos()),
+				}
+
+				issues = append(issues, issue)
 			}
 
-			issue := result.Issue{
-				FromExtractor: v.Name(),
-				IDToken:       tok,
-				MsgID:         raw,
-				Pkg:           pkg,
-				Comments:      extractCtx.GetComments(pkg, stringNode, stack),
-				Pos:           extractCtx.GetPosition(stringNode.Pos()),
-			}
-
-			issues = append(issues, issue)
 		}
 
 		funcParameterDefs := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
@@ -79,45 +78,48 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			return
 		}
 
-		issue := result.Issue{
-			FromExtractor: v.Name(),
-			Pkg:           pkg,
-			Pos:           extractCtx.GetPosition(node.Args[0].Pos()),
-			Comments:      extractCtx.GetComments(pkg, node.Args[0], stack),
-		}
+		collector := newSearchCollector()
+
+		// Function calls
 		for _, def := range funcParameterDefs {
 			for i, arg := range node.Args {
 				if (def.FieldPos != i) && !(i >= def.FieldPos && def.IsVariadic) {
 					continue
 				}
 
-				for _, res := range extractCtx.SearchStrings(arg) {
-					switch def.Token {
-					case etype.Singular, etype.Key, etype.PluralKey:
-						if issue.MsgID != "" {
-							issues = append(issues, issue)
-							issue = result.Issue{
-								FromExtractor: v.Name(),
-								Pkg:           pkg,
-								Comments:      extractCtx.GetComments(pkg, node.Args[0], stack),
-							}
-						}
+				foundResults := extractCtx.SearchStrings(arg)
+				if len(foundResults) == 0 {
+					continue
+				}
 
-						issue.Pos = extractCtx.GetPosition(res.Node.Pos())
-						issue.IDToken = def.Token
-						issue.MsgID = res.Raw
-					case etype.Plural:
-						issue.PluralID = res.Raw
-					case etype.Context:
-						issue.Context = res.Raw
-					case etype.Domain:
-						issue.Domain = res.Raw
-					}
+				switch def.Token {
+				case etype.Singular, etype.Key, etype.PluralKey:
+					collector.AddSingulars(def.Token, foundResults)
+				case etype.Plural:
+					collector.Plurals = append(collector.Plurals, foundResults...)
+				case etype.Context:
+					collector.Contexts = append(collector.Contexts, foundResults...)
+				case etype.Domain:
+					collector.Domains = append(collector.Domains, foundResults...)
 				}
 			}
 		}
 
-		issues = append(issues, issue)
+		for i, singularResult := range collector.Singulars {
+			issue := result.Issue{
+				FromExtractor: v.Name(),
+				IDToken:       collector.SingularType[i],
+				MsgID:         singularResult.Raw,
+				Domain:        collector.GetDomain(),
+				Context:       collector.GetContext(),
+				PluralID:      collector.GetPlural(),
+				Comments:      extractCtx.GetComments(pkg, singularResult.Node),
+				Pkg:           pkg,
+				Pos:           extractCtx.GetPosition(singularResult.Node.Pos()),
+			}
+			issues = append(issues, issue)
+		}
+
 		return
 	})
 

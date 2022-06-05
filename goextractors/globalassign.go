@@ -21,12 +21,11 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 	util.TrackTime(time.Now(), "extract global assign")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.ValueSpec{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.ValueSpec{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
 		}
-
 		node := rawNode.(*ast.ValueSpec)
 
 		selector := searchSelector(node.Type)
@@ -55,7 +54,7 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 					FromExtractor: v.Name(),
 					MsgID:         res.Raw,
 					Pkg:           pkg,
-					Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+					Comments:      extractCtx.GetComments(pkg, res.Node),
 					Pos:           extractCtx.GetPosition(res.Node.Pos()),
 				}
 

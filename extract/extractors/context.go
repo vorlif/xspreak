@@ -200,11 +200,13 @@ type SearchResult struct {
 func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 	results := make([]*SearchResult, 0)
 
+	// String was created at the current position
 	extracted, originNode := ExtractStringLiteral(startExpr)
 	if extracted != "" {
 		results = append(results, &SearchResult{Raw: extracted, Node: originNode})
 	}
 
+	// Backtracking the string
 	startIdent, ok := startExpr.(*ast.Ident)
 	if !ok || startIdent.Obj == nil {
 		return results
@@ -227,7 +229,7 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 			}
 			extracted, originNode = ExtractStringLiteral(node.Rhs[i])
 			if extracted != "" && extracted != mainMessage {
-				results = append(results, &SearchResult{Raw: extracted, Node: originNode})
+				results = append(results, &SearchResult{Raw: extracted, Node: node})
 			}
 
 		}
@@ -237,35 +239,55 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 	return results
 }
 
-func (c *Context) GetComments(pkg *packages.Package, node ast.Node, stack []ast.Node) []string {
-	if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
-		return nil
-	}
-
-	pos := c.GetPosition(node.Pos())
-	if _, hasFile := c.CommentMaps[pkg.PkgPath][pos.Filename]; !hasFile {
-		return nil
-	}
-
-	var topNode = node
-	for i := len(stack) - 1; i >= 0; i-- {
-		entry := stack[i]
-		entryPos := c.GetPosition(entry.Pos())
-		if !entryPos.IsValid() || entryPos.Line < pos.Line {
-			break
-		}
-
-		topNode = entry
-	}
-
+// GetComments extracts the Go comments for a list of nodes.
+func (c *Context) GetComments(pkg *packages.Package, nodes ...ast.Node) []string {
 	var comments []string
-	ast.Inspect(topNode, func(node ast.Node) bool {
-		nodeComments := c.CommentMaps[pkg.PkgPath][pos.Filename][node]
-		for _, com := range nodeComments {
-			comments = append(comments, com.Text())
-		}
-		return true
-	})
+	found := make(map[*ast.CommentGroup]bool)
+	for _, node := range nodes {
+		c.Inspector.WithStack([]ast.Node{node}, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
+			proceed = false
+			// Search stack for our node
+			if n != node {
+				return
+			}
+
+			if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
+				return
+			}
+
+			// Find the first node of the line
+			pos := c.GetPosition(node.Pos())
+			if _, hasFile := c.CommentMaps[pkg.PkgPath][pos.Filename]; !hasFile {
+				return
+			}
+
+			var topNode = node
+			for i := len(stack) - 1; i >= 0; i-- {
+				entry := stack[i]
+				entryPos := c.GetPosition(entry.Pos())
+				if !entryPos.IsValid() || entryPos.Line < pos.Line {
+					break
+				}
+
+				topNode = entry
+			}
+
+			// Search for all comments for this line
+			ast.Inspect(topNode, func(node ast.Node) bool {
+				nodeComments := c.CommentMaps[pkg.PkgPath][pos.Filename][node]
+				for _, com := range nodeComments {
+					if _, known := found[com]; known {
+						continue
+					}
+
+					found[com] = true
+					comments = append(comments, com.Text())
+				}
+				return true
+			})
+			return
+		})
+	}
 
 	return comments
 }
@@ -339,17 +361,18 @@ func searchSelector(expr interface{}) *ast.SelectorExpr {
 func ExtractStringLiteral(expr ast.Expr) (string, ast.Node) {
 	stack := []ast.Expr{expr}
 	var b strings.Builder
+	var elem ast.Expr
 
 	for len(stack) != 0 {
 		n := len(stack) - 1
-		elem := stack[n]
+		elem = stack[n]
 		stack = stack[:n]
 
 		switch v := elem.(type) {
 		//  Simple string with quotes or backqoutes
 		case *ast.BasicLit:
 			if v.Kind != token.STRING {
-				return "", v
+				continue
 			}
 
 			if unqouted, err := strconv.Unquote(v.Value); err != nil {
@@ -360,29 +383,29 @@ func ExtractStringLiteral(expr ast.Expr) (string, ast.Node) {
 		// Concatenation of several string literals
 		case *ast.BinaryExpr:
 			if v.Op != token.ADD {
-				return "", v
+				continue
 			}
 			stack = append(stack, v.Y, v.X)
 		case *ast.Ident:
 			if v.Obj == nil {
-				return "", v
+				continue
 			}
 			switch z := v.Obj.Decl.(type) {
 			case *ast.ValueSpec:
 				if len(z.Values) == 0 {
-					return "", v
+					continue
 				}
 				stack = append(stack, z.Values[0])
 			case *ast.AssignStmt:
 				if len(z.Rhs) == 0 {
-					return "", v
+					continue
 				}
 				stack = append(stack, z.Rhs...)
 			}
 		default:
-			return "", nil
+			continue
 		}
 	}
 
-	return b.String(), expr
+	return b.String(), elem
 }

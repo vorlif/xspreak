@@ -25,7 +25,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 	util.TrackTime(time.Now(), "extract slices")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
@@ -88,7 +88,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 						IDToken:       token,
 						MsgID:         res.Raw,
 						Pkg:           pkg,
-						Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+						Comments:      extractCtx.GetComments(pkg, res.Node),
 						Pos:           extractCtx.GetPosition(res.Node.Pos()),
 					}
 
@@ -110,7 +110,7 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 				continue
 			}
 
-			structIssues := extractStruct(extractCtx, compLit, obj, pkg, stack)
+			structIssues := extractStruct(extractCtx, compLit, obj, pkg)
 			issues = append(issues, structIssues...)
 		}
 

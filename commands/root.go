@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -17,6 +18,7 @@ import (
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/tmpl"
 	"github.com/vorlif/xspreak/tmplextractors"
+	"github.com/vorlif/xspreak/util"
 )
 
 // Version can be set at link time.
@@ -135,6 +137,7 @@ func (e *Extractor) extract() {
 	}
 
 	domainIssues := make(map[string][]result.Issue)
+	start := time.Now()
 	for _, iss := range extractedIssues {
 		if _, ok := domainIssues[iss.Domain]; !ok {
 			domainIssues[iss.Domain] = []result.Issue{iss}
@@ -142,6 +145,7 @@ func (e *Extractor) extract() {
 			domainIssues[iss.Domain] = append(domainIssues[iss.Domain], iss)
 		}
 	}
+	log.Debugf("sort extractions took %s", time.Since(start))
 
 	if len(extractedIssues) == 0 {
 		domainIssues[""] = make([]result.Issue, 0)
@@ -152,10 +156,12 @@ func (e *Extractor) extract() {
 }
 
 func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
+	util.TrackTime(time.Now(), "run all extractors")
 	extractorsToRun := []extractors.Extractor{
 		goextractors.NewDefinitionExtractor(),
 		goextractors.NewCommentsExtractor(),
 		goextractors.NewFuncCallExtractor(),
+		goextractors.NewFuncReturnExtractor(),
 		goextractors.NewGlobalAssignExtractor(),
 		goextractors.NewSliceDefExtractor(),
 		goextractors.NewMapsDefExtractor(),
@@ -185,6 +191,7 @@ func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
 }
 
 func (e *Extractor) saveDomains(domains map[string][]result.Issue) {
+	util.TrackTime(time.Now(), "save files")
 	for domainName, issues := range domains {
 		var outputFile string
 		if domainName == "" {

@@ -4,12 +4,14 @@ import (
 	"context"
 	"strings"
 	"text/template/parse"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/vorlif/xspreak/extract/extractors"
 	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/tmpl"
+	"github.com/vorlif/xspreak/util"
 )
 
 type commandExtractor struct{}
@@ -19,6 +21,8 @@ func NewCommandExtractor() extractors.Extractor {
 }
 
 func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
+	util.TrackTime(time.Now(), "extract templates")
+
 	var issues []result.Issue
 	if len(extractCtx.Config.Keywords) == 0 {
 		log.Debug("Skip template extraction, no keywords present")

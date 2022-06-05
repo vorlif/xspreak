@@ -24,7 +24,7 @@ func (v structDefExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 	util.TrackTime(time.Now(), "extract structs")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
@@ -56,7 +56,7 @@ func (v structDefExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 			return
 		}
 
-		structIssues := extractStruct(extractCtx, node, obj, pkg, stack)
+		structIssues := extractStruct(extractCtx, node, obj, pkg)
 		issues = append(issues, structIssues...)
 
 		return
@@ -69,14 +69,12 @@ func (v structDefExtractor) Name() string {
 	return "struct_extractor"
 }
 
-func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj types.Object, pkg *packages.Package, stack []ast.Node) []result.Issue {
+func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj types.Object, pkg *packages.Package) []result.Issue {
 	var issues []result.Issue
-	issue := result.Issue{
-		Pkg:      pkg,
-		Pos:      extractCtx.GetPosition(node.Pos()),
-		Comments: extractCtx.GetComments(pkg, node, stack),
-	}
+
 	definitionKey := util.ObjToKey(obj)
+	collector := newSearchCollector()
+
 	if _, isKv := node.Elts[0].(*ast.KeyValueExpr); isKv {
 		for _, elt := range node.Elts {
 			kve, ok := elt.(*ast.KeyValueExpr)
@@ -94,30 +92,20 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 				continue
 			}
 
-			raw, stringNode := extractors.ExtractStringLiteral(kve.Value)
-			if raw == "" {
+			foundResults := extractCtx.SearchStrings(kve.Value)
+			if len(foundResults) == 0 {
 				continue
-			}
-
-			if etype.IsMessageID(def.Token) && issue.MsgID != "" {
-				issues = append(issues, issue)
-				issue = result.Issue{
-					Pkg:      pkg,
-					Pos:      extractCtx.GetPosition(node.Pos()),
-					Comments: extractCtx.GetComments(pkg, stringNode, stack),
-				}
 			}
 
 			switch def.Token {
 			case etype.Singular, etype.Key, etype.PluralKey:
-				issue.IDToken = def.Token
-				issue.MsgID = raw
+				collector.AddSingulars(def.Token, foundResults)
 			case etype.Plural:
-				issue.PluralID = raw
+				collector.Plurals = append(collector.Plurals, foundResults...)
 			case etype.Context:
-				issue.Context = raw
+				collector.Contexts = append(collector.Contexts, foundResults...)
 			case etype.Domain:
-				issue.Domain = raw
+				collector.Domains = append(collector.Domains, foundResults...)
 			}
 		}
 	} else {
@@ -127,35 +115,39 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 					continue
 				}
 
-				raw, stringNode := extractors.ExtractStringLiteral(elt)
-				if raw == "" {
+				foundResults := extractCtx.SearchStrings(elt)
+				if len(foundResults) == 0 {
 					continue
-				}
-
-				if etype.IsMessageID(attrDef.Token) && issue.MsgID != "" {
-					issues = append(issues, issue)
-					issue = result.Issue{
-						Pkg:      pkg,
-						Pos:      extractCtx.GetPosition(node.Pos()),
-						Comments: extractCtx.GetComments(pkg, stringNode, stack),
-					}
 				}
 
 				switch attrDef.Token {
 				case etype.Singular, etype.Key, etype.PluralKey:
-					issue.IDToken = attrDef.Token
-					issue.MsgID = raw
+					collector.AddSingulars(attrDef.Token, foundResults)
 				case etype.Plural:
-					issue.PluralID = raw
+					collector.Plurals = append(collector.Plurals, foundResults...)
 				case etype.Context:
-					issue.Context = raw
+					collector.Contexts = append(collector.Contexts, foundResults...)
 				case etype.Domain:
-					issue.Domain = raw
+					collector.Domains = append(collector.Domains, foundResults...)
 				}
 			}
 		}
 	}
 
-	issues = append(issues, issue)
+	for i, singularResult := range collector.Singulars {
+		issue := result.Issue{
+			FromExtractor: "extract_struct",
+			IDToken:       collector.SingularType[i],
+			MsgID:         singularResult.Raw,
+			Domain:        collector.GetDomain(),
+			Context:       collector.GetContext(),
+			PluralID:      collector.GetPlural(),
+			Comments:      extractCtx.GetComments(pkg, singularResult.Node),
+			Pkg:           pkg,
+			Pos:           extractCtx.GetPosition(singularResult.Node.Pos()),
+		}
+		issues = append(issues, issue)
+	}
+
 	return issues
 }

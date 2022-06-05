@@ -21,7 +21,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 	util.TrackTime(time.Now(), "extract maps")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.CompositeLit{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
@@ -51,7 +51,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 
 			token := extractCtx.GetLocalizeTypeToken(ident)
 
-			// Array of strings
+			// Map of strings
 			if etype.IsMessageID(token) {
 				for _, elt := range node.Elts {
 					kvExpr, isKv := elt.(*ast.KeyValueExpr)
@@ -71,7 +71,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 							IDToken:       token,
 							MsgID:         res.Raw,
 							Pkg:           pkg,
-							Comments:      extractCtx.GetComments(pkg, res.Node, stack),
+							Comments:      extractCtx.GetComments(pkg, res.Node),
 							Pos:           extractCtx.GetPosition(res.Node.Pos()),
 						}
 
@@ -82,6 +82,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 				continue
 			}
 
+			// Array of structs
 			structAttr := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
 			if structAttr == nil {
 				return
@@ -104,7 +105,7 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 					continue
 				}
 
-				structIssues := extractStruct(extractCtx, compLit, obj, pkg, stack)
+				structIssues := extractStruct(extractCtx, compLit, obj, pkg)
 				issues = append(issues, structIssues...)
 			}
 		}

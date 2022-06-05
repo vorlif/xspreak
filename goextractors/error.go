@@ -22,7 +22,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 	util.TrackTime(time.Now(), "extract errors")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.CallExpr{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.Nodes([]ast.Node{&ast.CallExpr{}}, func(rawNode ast.Node, push bool) (proceed bool) {
 		proceed = true
 		if !push {
 			return
@@ -57,7 +57,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 			MsgID:         msgID,
 			Pkg:           pkg,
 			Context:       extractCtx.Config.ErrorContext,
-			Comments:      extractCtx.GetComments(pkg, node, stack),
+			Comments:      extractCtx.GetComments(pkg, msgNode),
 			Pos:           extractCtx.GetPosition(msgNode.Pos()),
 		}
 
