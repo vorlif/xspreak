@@ -49,6 +49,7 @@ func main() {
 
 * Your project must be a go module (must have a `go.mod` and `go.sum`)
 * The dependencies of your project must be installed `go mod tidy`
+* xspreak searches all files for strings to extract. This can take a lot of memory or CPU time for larger projects.
 
 ## How to install
 
@@ -142,6 +143,24 @@ func init() {
 }
 ```
 
+### Return values of functions
+
+Return values of functions are extracted if the parameter type is from the `localize` package.
+The parameters of a function are grouped together to form a message.
+Thus, a message can be created with singular, plural, a context and a domain.
+Named return values are currently not supported.
+
+```go
+package main
+
+import "github.com/vorlif/spreak/localize"
+
+func noop() (localize.Singular, localize.Plural, localize.Context) {
+	// Extracted as a message with singular, plural and a context
+	return "I have %d car", "I have %d cars", "cars"
+}
+```
+
 ### Attributes at struct initialization
 
 Struct initializations are extracted if the struct was **defined globally** and
@@ -200,7 +219,7 @@ func main() {
 }
 ```
 
-### Values from an map initialization
+### Values from a map initialization
 
 During map initialization keys and values are extracted,
 if the type is `localize.Singular` or a struct that contains parameter types from the `localize` package.
@@ -310,6 +329,26 @@ const tmpl = `{{.T.Get "Hello"}}`
 There is also a [detailed example](https://github.com/vorlif/spreak/tree/main/examples/features/httptempl) how to use
 spreak with templates and your own keywords.
 
+### Variables tracing
+
+For `localize.Singular` and `localize.MsgID`, variable tracing is supported for simple cases.
+The following example extracts two strings. One string with "Yes" and one string with "No, better a beer".
+
+```go
+func WantCoffee() localize.Singular {
+	answer := "Yes"
+	
+	switch time.Now().Weekday() {
+	case time.Friday, time.Saturday, time.Sunday:
+        answer = "No, better a beer"
+	}
+
+	return answer
+}
+```
+
+Whether tracing works for a particular use case should be verified separately for each use case.
+
 ### Using monolingual format (e.g. Key-Value)
 
 To use monolingual format, the following changes must be made.
@@ -322,6 +361,8 @@ To use monolingual format, the following changes must be made.
    # Example
    xspreak -f json -D ./ -p locale/ -k "i18n.TrN:1,1" --template-use-kv -t "templates/*.html"
    ```
+
+All of the above functions also apply to `localize.Key` and `localize.PluralKey`.
    
 5. Use [KeyLocalizer](https://pkg.go.dev/github.com/vorlif/spreak#KeyLocalizer) instead of Localizer in the code
 
