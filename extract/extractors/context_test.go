@@ -45,13 +45,13 @@ func TestExtractStringLiteral(t *testing.T) {
 		{
 			name:      "Backqoutes with qoutes",
 			code:      "`This is an \"Test\" abc`",
-			wantStr:   "This is an \\\"Test\\\" abc",
+			wantStr:   "This is an \"Test\" abc",
 			wantFound: true,
 		},
 		{
 			name:      "Backqoutes with qoutes",
 			code:      `"This is an \"Test\" abc"`,
-			wantStr:   "This is an \\\"Test\\\" abc",
+			wantStr:   "This is an \"Test\" abc",
 			wantFound: true,
 		},
 		{

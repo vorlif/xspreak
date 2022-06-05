@@ -7,7 +7,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
-	github.com/vorlif/spreak v0.3.0
+	github.com/vorlif/spreak v0.3.2
 	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.10
 )
