@@ -134,6 +134,7 @@ func extractStruct(extractCtx *extractors.Context, node *ast.CompositeLit, obj t
 		}
 	}
 
+	collector.CheckMissingMessageID(extractCtx)
 	for i, singularResult := range collector.Singulars {
 		issue := result.Issue{
 			FromExtractor: "extract_struct",

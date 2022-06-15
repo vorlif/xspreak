@@ -36,7 +36,7 @@ func (e *funcReturnExtractor) Run(_ context.Context, extractCtx *extractors.Cont
 		extractedResults := make([]etype.Token, len(node.Type.Results.List))
 		var foundType bool
 		for i, res := range node.Type.Results.List {
-			if tok, _ := extractCtx.SearchIdentAndToken(res); tok == etype.None || tok == etype.Message {
+			if tok, _ := extractCtx.SearchIdentAndToken(res); tok == etype.None {
 				extractedResults[i] = etype.None
 				continue
 			} else {
@@ -86,6 +86,7 @@ func (e *funcReturnExtractor) Run(_ context.Context, extractCtx *extractors.Cont
 				}
 			}
 
+			collector.CheckMissingMessageID(extractCtx)
 			for i, singularResult := range collector.Singulars {
 				issue := result.Issue{
 					FromExtractor: e.Name(),

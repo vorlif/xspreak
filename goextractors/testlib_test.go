@@ -2,6 +2,7 @@ package goextractors
 
 import (
 	"context"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
@@ -21,12 +22,12 @@ const (
 
 func TestPrintAst(t *testing.T) {
 	fset := token.NewFileSet() // positions are relative to fset
-	_, err := parser.ParseFile(fset, filepath.Join(testdataDir, "slices.go"), nil, 0)
+	f, err := parser.ParseFile(fset, filepath.Join(testdataDir, "funccall.go"), nil, 0)
 	if err != nil {
 		panic(err)
 	}
 
-	// ast.Print(fset, f)
+	ast.Print(fset, f)
 }
 
 func runExtraction(t *testing.T, dir string, testExtractors ...extractors.Extractor) []result.Issue {

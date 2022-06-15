@@ -35,6 +35,9 @@ func (v globalAssignExtractor) Run(_ context.Context, extractCtx *extractors.Con
 
 		tok := extractCtx.GetLocalizeTypeToken(selector)
 		if tok != etype.Singular {
+			if tok != etype.None {
+				writeMissingMessageID(extractCtx.GetPosition(selector.Pos()), tok, "")
+			}
 			return
 		}
 

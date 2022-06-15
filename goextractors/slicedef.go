@@ -97,6 +97,8 @@ func (v sliceDefExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			}
 
 			return
+		} else if token != etype.None {
+			writeMissingMessageID(extractCtx.GetPosition(node.Pos()), token, "")
 		}
 
 		structAttr := extractCtx.Definitions.GetFields(util.ObjToKey(obj))

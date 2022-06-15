@@ -80,6 +80,8 @@ func (v mapsDefExtractor) Run(_ context.Context, extractCtx *extractors.Context)
 				}
 
 				continue
+			} else if token != etype.None {
+				writeMissingMessageID(extractCtx.GetPosition(ident.Pos()), token, "")
 			}
 
 			// Array of structs

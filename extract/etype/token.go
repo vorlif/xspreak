@@ -5,12 +5,11 @@ type Token string
 const (
 	None      Token = ""
 	Singular  Token = "Singular"
+	Key       Token = "Key"
+	PluralKey Token = "PluralKey"
 	Plural    Token = "Plural"
 	Domain    Token = "Domain"
 	Context   Token = "Context"
-	Message   Token = "Message"
-	Key       Token = "Key"
-	PluralKey Token = "PluralKey"
 )
 
 func IsMessageID(tok Token) bool {

@@ -58,6 +58,10 @@ func builtInFunctions() {
 		panic(err)
 	}
 
+	inlineFunc := func(inlineParam alias.Singular) {}
+
+	inlineFunc("inline function")
+
 	t := spreak.NewLocalizer(bundle, "en")
 	// TRANSLATORS: Test
 	// multiline

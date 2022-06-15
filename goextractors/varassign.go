@@ -55,6 +55,8 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 
 				issues = append(issues, issue)
 			}
+		} else if token != etype.None {
+			writeMissingMessageID(extractCtx.GetPosition(node.Pos()), token, "")
 		}
 
 		return

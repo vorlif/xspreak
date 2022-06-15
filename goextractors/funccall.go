@@ -70,7 +70,8 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 
 				issues = append(issues, issue)
 			}
-
+		} else if tok != etype.None {
+			writeMissingMessageID(extractCtx.GetPosition(ident.Pos()), tok, "")
 		}
 
 		funcParameterDefs := extractCtx.Definitions.GetFields(util.ObjToKey(obj))
@@ -105,6 +106,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			}
 		}
 
+		collector.CheckMissingMessageID(extractCtx)
 		for i, singularResult := range collector.Singulars {
 			issue := result.Issue{
 				FromExtractor: v.Name(),

@@ -199,11 +199,13 @@ type SearchResult struct {
 
 func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 	results := make([]*SearchResult, 0)
+	found := make(map[ast.Node]struct{})
 
 	// String was created at the current position
 	extracted, originNode := ExtractStringLiteral(startExpr)
 	if extracted != "" {
 		results = append(results, &SearchResult{Raw: extracted, Node: originNode})
+		found[originNode] = struct{}{}
 	}
 
 	// Backtracking the string
@@ -211,7 +213,7 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 	if !ok || startIdent.Obj == nil {
 		return results
 	}
-	mainMessage := extracted
+
 	c.Inspector.WithStack([]ast.Node{&ast.AssignStmt{}}, func(raw ast.Node, push bool, stack []ast.Node) (proceed bool) {
 		proceed = false
 
@@ -219,6 +221,7 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 		if len(node.Lhs) != len(node.Rhs) || len(node.Lhs) == 0 {
 			return
 		}
+
 		for i, left := range node.Lhs {
 			leftIdent, isIdent := left.(*ast.Ident)
 			if !isIdent {
@@ -227,9 +230,15 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 			if leftIdent.Obj != startIdent.Obj {
 				continue
 			}
+
+			if _, ok := found[node.Rhs[i]]; ok {
+				continue
+			}
+
 			extracted, originNode = ExtractStringLiteral(node.Rhs[i])
-			if extracted != "" && extracted != mainMessage {
-				results = append(results, &SearchResult{Raw: extracted, Node: node})
+			if extracted != "" {
+				found[node.Rhs[i]] = struct{}{}
+				results = append(results, &SearchResult{Raw: extracted, Node: originNode})
 			}
 
 		}
@@ -242,8 +251,19 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 // GetComments extracts the Go comments for a list of nodes.
 func (c *Context) GetComments(pkg *packages.Package, nodes ...ast.Node) []string {
 	var comments []string
+
+	if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
+		return comments
+	}
+
 	found := make(map[*ast.CommentGroup]bool)
+
 	for _, node := range nodes {
+		pos := c.GetPosition(node.Pos())
+		if _, hasFile := c.CommentMaps[pkg.PkgPath][pos.Filename]; !hasFile {
+			break
+		}
+
 		c.Inspector.WithStack([]ast.Node{node}, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
 			proceed = false
 			// Search stack for our node
@@ -251,16 +271,7 @@ func (c *Context) GetComments(pkg *packages.Package, nodes ...ast.Node) []string
 				return
 			}
 
-			if _, hasPkg := c.CommentMaps[pkg.PkgPath]; !hasPkg {
-				return
-			}
-
 			// Find the first node of the line
-			pos := c.GetPosition(node.Pos())
-			if _, hasFile := c.CommentMaps[pkg.PkgPath][pos.Filename]; !hasFile {
-				return
-			}
-
 			var topNode = node
 			for i := len(stack) - 1; i >= 0; i-- {
 				entry := stack[i]

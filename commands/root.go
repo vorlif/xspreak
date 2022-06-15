@@ -56,8 +56,8 @@ func init() {
 	fs.BoolVarP(&extractCfg.ExtractErrors, "extract-errors", "e", def.ExtractErrors, "Strings from errors.New(STRING) are extracted")
 	fs.StringVar(&extractCfg.ErrorContext, "errors-context", def.ErrorContext, "Context which is automatically assigned to extracted errors")
 
-	fs.StringArrayVarP(&extractCfg.TemplatePatterns, "template-directory", "t", def.TemplatePatterns, "Set a list of paths to which the template files contain. Regular expressions can be used.")
-	fs.String("template-prefix", ".T", "Sets a prefix for the translation functions, which is used within the templates")
+	fs.StringArrayVarP(&extractCfg.TemplatePatterns, "template-directory", "t", []string{}, "Set a list of paths to which the template files contain. Regular expressions can be used.")
+	fs.String("template-prefix", "", "Sets a prefix for the translation functions, which is used within the templates")
 	fs.BoolVar(&extractCfg.TmplIsMonolingual, "template-use-kv", false, "Determines whether the strings from templates should be handled as key-value")
 	fs.StringArrayP("template-keyword", "k", []string{}, "Sets a keyword that is used within templates to identify translation functions")
 
@@ -77,7 +77,7 @@ func validateExtractConfig(cmd *cobra.Command) {
 	fs := cmd.Flags()
 	if keywordPrefix, errP := fs.GetString("template-prefix"); errP != nil {
 		log.WithError(errP).Fatal("Args could not be parsed")
-	} else {
+	} else if keywordPrefix != "" {
 		extractCfg.Keywords = tmpl.DefaultKeywords(keywordPrefix, extractCfg.TmplIsMonolingual)
 	}
 

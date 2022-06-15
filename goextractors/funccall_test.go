@@ -11,7 +11,7 @@ func TestFuncCallExtractor(t *testing.T) {
 	assert.NotEmpty(t, issues)
 
 	want := []string{
-		// "f-msgid", "f-plural", "f-context", "f-domain",
+		"f-msgid", "f-plural", "f-context", "f-domain",
 		"init", "localizer func call",
 		"noop-msgid", "noop-plural", "noop-context", "noop-domain",
 		"msgid",
@@ -28,6 +28,7 @@ func TestFuncCallExtractor(t *testing.T) {
 		"no-param-msgid", "no-param-plural",
 		"multi-names-a", "multi-names-b",
 		"init backtrace", "assign backtrace",
+		"inline function",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)

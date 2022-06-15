@@ -48,6 +48,8 @@ func (s commentCleaner) Process(inIssues []result.Issue) ([]result.Issue, error)
 		// filter text
 		for _, lines := range commentLines {
 			isTranslatorComment := false
+
+			var cleanedLines []string
 			for _, line := range lines {
 				line = strings.TrimSpace(line)
 				if s.hasTranslatorPrefix(line) {
@@ -62,8 +64,12 @@ func (s commentCleaner) Process(inIssues []result.Issue) ([]result.Issue, error)
 				}
 
 				if isTranslatorComment {
-					cleanedComments = append(cleanedComments, line)
+					cleanedLines = append(cleanedLines, line)
 				}
+			}
+
+			if len(cleanedLines) > 0 {
+				cleanedComments = append(cleanedComments, strings.Join(cleanedLines, " "))
 			}
 		}
 

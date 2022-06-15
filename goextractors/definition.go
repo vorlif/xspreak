@@ -48,6 +48,8 @@ func (de *definitionExtractorRunner) searchDefinitions(n ast.Node, push bool) bo
 	switch v := n.(type) {
 	case *ast.FuncDecl:
 		de.extractFunc(v)
+	case *ast.AssignStmt:
+		de.extractInlineFunc(v)
 	case *ast.GenDecl:
 		switch v.Tok {
 		case token.VAR:
@@ -178,58 +180,78 @@ func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 // func translate(msgid localize.Singular, plural localize.Plural)
 // func getTranslation() (localize.Singular, localize.Plural).
 func (de *definitionExtractorRunner) extractFunc(decl *ast.FuncDecl) {
-	pck, obj := de.extractCtx.GetType(decl.Name)
+	if decl.Type == nil || decl.Type.Params == nil {
+		return
+	}
+
+	de.extractFunctionsParams(decl.Name, decl.Type)
+}
+
+func (de *definitionExtractorRunner) extractInlineFunc(assign *ast.AssignStmt) {
+	if len(assign.Lhs) == 0 || len(assign.Lhs) != len(assign.Rhs) {
+		return
+	}
+
+	ident, ok := assign.Lhs[0].(*ast.Ident)
+	if !ok {
+		return
+	}
+
+	funcLit, ok := assign.Rhs[0].(*ast.FuncLit)
+	if !ok || funcLit.Type == nil || funcLit.Type.Params == nil {
+		return
+	}
+
+	de.extractFunctionsParams(ident, funcLit.Type)
+}
+
+func (de *definitionExtractorRunner) extractFunctionsParams(ident *ast.Ident, t *ast.FuncType) {
+	pck, obj := de.extractCtx.GetType(ident)
 	if pck == nil {
 		return
 	}
 
-	if decl.Type == nil {
-		return
-	}
-
 	// function call
-	if decl.Type.Params != nil {
-		for i, param := range decl.Type.Params.List {
-			tok, _ := de.extractCtx.SearchIdentAndToken(param)
-			if tok == etype.None || tok == etype.Message {
-				continue
+	for i, param := range t.Params.List {
+		tok, _ := de.extractCtx.SearchIdentAndToken(param)
+		if tok == etype.None {
+			continue
+		}
+
+		if len(param.Names) == 0 {
+			def := &extractors.Definition{
+				Type:       extractors.FunctionParam,
+				Token:      tok,
+				Pck:        pck,
+				Ident:      ident,
+				Path:       obj.Pkg().Path(),
+				ID:         util.ObjToKey(obj),
+				Obj:        obj,
+				FieldIdent: nil,
+				FieldName:  strconv.Itoa(i),
+
+				FieldPos:   i,
+				IsVariadic: isEllipsis(param.Type),
 			}
+			de.addDefinition(def)
+		}
 
-			if len(param.Names) == 0 {
-				def := &extractors.Definition{
-					Type:       extractors.FunctionParam,
-					Token:      tok,
-					Pck:        pck,
-					Ident:      decl.Name,
-					Path:       obj.Pkg().Path(),
-					ID:         util.ObjToKey(obj),
-					Obj:        obj,
-					FieldIdent: nil,
-					FieldName:  strconv.Itoa(i),
+		for ii, name := range param.Names {
+			def := &extractors.Definition{
+				Type:       extractors.FunctionParam,
+				Token:      tok,
+				Pck:        pck,
+				Ident:      ident,
+				Path:       obj.Pkg().Path(),
+				ID:         util.ObjToKey(obj),
+				Obj:        obj,
+				FieldIdent: name,
+				FieldName:  name.Name,
+				IsVariadic: isEllipsis(param.Type),
 
-					FieldPos:   i,
-					IsVariadic: isEllipsis(param.Type),
-				}
-				de.addDefinition(def)
+				FieldPos: calculatePosIdx(i, ii),
 			}
-
-			for ii, name := range param.Names {
-				def := &extractors.Definition{
-					Type:       extractors.FunctionParam,
-					Token:      tok,
-					Pck:        pck,
-					Ident:      decl.Name,
-					Path:       obj.Pkg().Path(),
-					ID:         util.ObjToKey(obj),
-					Obj:        obj,
-					FieldIdent: name,
-					FieldName:  name.Name,
-					IsVariadic: isEllipsis(param.Type),
-
-					FieldPos: calculatePosIdx(i, ii),
-				}
-				de.addDefinition(def)
-			}
+			de.addDefinition(def)
 		}
 	}
 }

@@ -2,10 +2,17 @@ package goextractors
 
 import (
 	"go/ast"
+	"go/token"
+	"os"
+	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/extract/extractors"
 )
+
+var workingDir, _ = os.Getwd()
 
 func searchSelector(expr interface{}) *ast.SelectorExpr {
 	switch v := expr.(type) {
@@ -41,6 +48,31 @@ type searchCollector struct {
 	Contexts     []*extractors.SearchResult
 	Domains      []*extractors.SearchResult
 	ExtraNodes   []ast.Node
+}
+
+func writeMissingMessageID(position token.Position, token etype.Token, text string) {
+	var typeName string
+	switch token {
+	case etype.Plural:
+		typeName = "plural"
+	case etype.Context:
+		typeName = "context"
+	case etype.Domain:
+		typeName = "domain"
+	default:
+		typeName = "unknown"
+	}
+
+	filename := position.Filename
+	if relPath, err := filepath.Rel(workingDir, filename); err == nil {
+		filename = relPath
+	}
+
+	if text != "" {
+		log.Warnf("%s:%d usage of %s without MessageID is not supported", filename, position.Line, typeName)
+	} else {
+		log.Warnf("%s:%d usage of %s without MessageID is not supported: %q", filename, position.Line, typeName, text)
+	}
 }
 
 func newSearchCollector() *searchCollector {
@@ -99,4 +131,24 @@ func (sc *searchCollector) GetNodes() []ast.Node {
 	}
 
 	return nodes
+}
+
+func (sc *searchCollector) CheckMissingMessageID(extractCtx *extractors.Context) {
+	for _, sing := range sc.Singulars {
+		if sing.Raw != "" {
+			return
+		}
+	}
+
+	for _, plural := range sc.Plurals {
+		writeMissingMessageID(extractCtx.GetPosition(plural.Node.Pos()), etype.Plural, plural.Raw)
+	}
+
+	for _, ctx := range sc.Contexts {
+		writeMissingMessageID(extractCtx.GetPosition(ctx.Node.Pos()), etype.Plural, ctx.Raw)
+	}
+
+	for _, domain := range sc.Domains {
+		writeMissingMessageID(extractCtx.GetPosition(domain.Node.Pos()), etype.Plural, domain.Raw)
+	}
 }
