@@ -101,7 +101,11 @@ func (sc *searchCollector) GetPlural() string {
 
 func (sc *searchCollector) GetContext() string {
 	if len(sc.Contexts) > 0 {
-		return sc.Contexts[0].Raw
+		for _, c := range sc.Contexts {
+			if c != nil && c.Raw != "" {
+				return c.Raw
+			}
+		}
 	}
 	return ""
 }

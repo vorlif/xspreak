@@ -14,6 +14,7 @@ func noop(sing alias.MsgID, plural alias.Plural, context alias.Context, domain a
 func noParamNames(alias.MsgID, alias.Plural)                                                 {}
 func variadicFunc(a alias.Singular, vars ...alias.Singular)                                  {}
 func multiNamesFunc(a, b alias.MsgID)                                                        {}
+func ctxAndMsg(c alias.Context, msgid alias.Singular)                                        {}
 
 func GenericFunc[V int64 | float64](log alias.Singular, i V) V {
 	return i
@@ -46,6 +47,8 @@ func localizerCall(loc *sp.Localizer) {
 	var assignBacktrace string
 	assignBacktrace = "assign backtrace"
 	loc.Get(assignBacktrace)
+
+	ctxAndMsg(constCtx, "constCtxMsg")
 }
 
 func builtInFunctions() {

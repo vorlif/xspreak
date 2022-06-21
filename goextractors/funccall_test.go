@@ -29,7 +29,16 @@ func TestFuncCallExtractor(t *testing.T) {
 		"multi-names-a", "multi-names-b",
 		"init backtrace", "assign backtrace",
 		"inline function",
+
+		"constCtxMsg", "constCtxVal",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)
+
+	for _, iss := range issues {
+		switch iss.MsgID {
+		case "constCtxMsg":
+			assert.Equal(t, "constCtxVal", iss.Context)
+		}
+	}
 }

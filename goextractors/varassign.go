@@ -3,6 +3,7 @@ package goextractors
 import (
 	"context"
 	"go/ast"
+	"go/types"
 	"time"
 
 	"github.com/vorlif/xspreak/extract/etype"
@@ -37,7 +38,7 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 			return
 		}
 
-		pkg, _ := extractCtx.GetType(ident)
+		pkg, obj := extractCtx.GetType(ident)
 		if pkg == nil {
 			return
 		}
@@ -56,7 +57,21 @@ func (v varAssignExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 				issues = append(issues, issue)
 			}
 		} else if token != etype.None {
-			writeMissingMessageID(extractCtx.GetPosition(node.Pos()), token, "")
+			shouldPrint := true
+			objType := obj.Type()
+			if objType != nil {
+				if pointerT, ok := objType.(*types.Pointer); ok {
+					objType = pointerT.Elem()
+				}
+
+				if _, isNamed := objType.(*types.Named); isNamed {
+					shouldPrint = false
+				}
+			}
+
+			if shouldPrint {
+				writeMissingMessageID(extractCtx.GetPosition(node.Pos()), token, "")
+			}
 		}
 
 		return

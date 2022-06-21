@@ -6,6 +6,10 @@ import (
 	"github.com/vorlif/spreak/localize"
 )
 
+const (
+	constCtx = "constCtxVal"
+)
+
 type M struct {
 	Test  localize.Singular
 	Hello string

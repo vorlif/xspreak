@@ -2,6 +2,7 @@ package extractors
 
 import (
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"go/types"
 	"strconv"
@@ -210,7 +211,17 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 
 	// Backtracking the string
 	startIdent, ok := startExpr.(*ast.Ident)
-	if !ok || startIdent.Obj == nil {
+	if !ok {
+		return results
+	}
+
+	if startIdent.Obj == nil {
+		_, obj := c.GetType(startIdent)
+		if constObj, ok := obj.(*types.Const); ok && constObj.Val().Kind() == constant.String {
+			if stringVal := constant.StringVal(constObj.Val()); stringVal != "" {
+				results = append(results, &SearchResult{Raw: stringVal, Node: originNode})
+			}
+		}
 		return results
 	}
 
