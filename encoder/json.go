@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vorlif/spreak/pkg/cldrplural"
+	"github.com/vorlif/spreak/catalog/cldrplural"
 
 	"github.com/vorlif/xspreak/extract/etype"
 	"github.com/vorlif/xspreak/result"

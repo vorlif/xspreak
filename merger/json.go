@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/vorlif/spreak/pkg/cldrplural"
+	"github.com/vorlif/spreak/catalog/cldrplural"
 
 	"github.com/vorlif/xspreak/encoder"
 )

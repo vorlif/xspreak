@@ -9,7 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/vorlif/spreak/pkg/po"
+	"github.com/vorlif/spreak/catalog/po"
 
 	"github.com/vorlif/xspreak/config"
 	"github.com/vorlif/xspreak/result"

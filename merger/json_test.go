@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vorlif/spreak/pkg/cldrplural"
+	"github.com/vorlif/spreak/catalog/cldrplural"
 )
 
 func TestMergeJson(t *testing.T) {

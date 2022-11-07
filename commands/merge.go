@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/text/language"
 
-	"github.com/vorlif/spreak/pkg/cldrplural"
+	"github.com/vorlif/spreak/catalog/cldrplural"
 
 	"github.com/vorlif/xspreak/merger"
 )

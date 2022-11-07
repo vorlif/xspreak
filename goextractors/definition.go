@@ -105,10 +105,10 @@ func (de *definitionExtractorRunner) extractVar(decl *ast.GenDecl) {
 }
 
 /*
-type TT struct {
-	T localize.Singular
-	P localize.Plural
-}.
+	type TT struct {
+		T localize.Singular
+		P localize.Plural
+	}.
 */
 func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 	for _, spec := range decl.Specs {
