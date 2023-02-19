@@ -21,8 +21,7 @@ import (
 	"github.com/vorlif/xspreak/util"
 )
 
-// Version can be set at link time.
-var Version = "0.0.0"
+var Version = "v0.9.0"
 
 var (
 	extractCfg = config.NewDefault()

@@ -17,9 +17,9 @@ jobs:
           go-version: '>=1.18.0'
       - name: Build binaries
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-linux-amd64" -ldflags "-X github.com/vorlif/xspreak/commands.Version=$(git describe --tags)"
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-darwin-amd64" -ldflags "-X github.com/vorlif/xspreak/commands.Version=$(git describe --tags)"
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-windows-amd64.exe" -ldflags "-X github.com/vorlif/xspreak/commands.Version=$(git describe --tags)"
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-linux-amd64"
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-darwin-amd64"
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o "xspreak-$(git describe --tags)-windows-amd64.exe"
       - name: Upload release artifacts
         uses: actions/github-script@v3
         with:
