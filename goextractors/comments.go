@@ -16,7 +16,7 @@ func NewCommentsExtractor() extractors.Extractor {
 	return &commentsExtractor{}
 }
 
-func (d *commentsExtractor) Run(ctx context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
+func (d *commentsExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	util.TrackTime(time.Now(), "Extract comments")
 	for _, pkg := range extractCtx.OriginalPackages {
 		for _, file := range pkg.Syntax {
