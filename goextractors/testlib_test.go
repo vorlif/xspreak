@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vorlif/xspreak/config"
@@ -23,11 +24,10 @@ const (
 func TestPrintAst(t *testing.T) {
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, filepath.Join(testdataDir, "funccall.go"), nil, 0)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	ast.Print(fset, f)
+	err = ast.Print(fset, f)
+	assert.NoError(t, err)
 }
 
 func runExtraction(t *testing.T, dir string, testExtractors ...extractors.Extractor) []result.Issue {

@@ -5,6 +5,7 @@ import (
 )
 
 // TRANSLATORS: Name of the app
+//
 //goland:noinspection GoVarAndConstTypeMayBeOmitted
 var applicationName alias.Singular = "app"
 

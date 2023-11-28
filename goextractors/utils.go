@@ -32,13 +32,15 @@ func searchSelector(expr interface{}) *ast.SelectorExpr {
 }
 
 func calculatePosIdx(first, second int) int {
-	if first > 0 && second > 0 {
-		return first * second
-	} else if first > 0 {
+	if first > 0 {
+		if second > 0 {
+			return first * second
+		}
+
 		return first
-	} else {
-		return second
 	}
+
+	return second
 }
 
 type searchCollector struct {

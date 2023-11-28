@@ -130,13 +130,13 @@ func DefaultKeywords(name string, isMonolingual bool) []*Keyword {
 }
 
 func (k *Keyword) MaxPosition() int {
-	start := max(k.SingularPos, -1)
-	start = max(start, k.PluralPos)
-	start = max(start, k.ContextPos)
-	return max(start, k.DomainPos)
+	start := maxOf(k.SingularPos, -1)
+	start = maxOf(start, k.PluralPos)
+	start = maxOf(start, k.ContextPos)
+	return maxOf(start, k.DomainPos)
 }
 
-func max(x, y int) int {
+func maxOf(x, y int) int {
 	if x > y {
 		return x
 	}

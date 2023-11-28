@@ -36,13 +36,14 @@ func (e *funcReturnExtractor) Run(_ context.Context, extractCtx *extractors.Cont
 		extractedResults := make([]etype.Token, len(node.Type.Results.List))
 		var foundType bool
 		for i, res := range node.Type.Results.List {
-			if tok, _ := extractCtx.SearchIdentAndToken(res); tok == etype.None {
+			tok, _ := extractCtx.SearchIdentAndToken(res)
+			if tok == etype.None {
 				extractedResults[i] = etype.None
 				continue
-			} else {
-				extractedResults[i] = tok
-				foundType = true
 			}
+
+			extractedResults[i] = tok
+			foundType = true
 		}
 
 		if !foundType {

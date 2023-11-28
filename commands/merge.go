@@ -33,7 +33,7 @@ func init() {
 	rootCmd.AddCommand(mergeCmd)
 }
 
-func mergeCmdF(cmd *cobra.Command, args []string) {
+func mergeCmdF(cmd *cobra.Command, _ []string) {
 	targetLang, errL := cmd.Flags().GetString("lang")
 	if errL != nil {
 		log.WithError(errL).Fatal("Invalid source file")
