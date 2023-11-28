@@ -26,7 +26,6 @@ func NewPotEncoder(cfg *config.Config, w io.Writer) Encoder {
 	enc.SetWrapWidth(cfg.WrapWidth)
 	enc.SetWriteHeader(!cfg.OmitHeader)
 	enc.SetWriteReferences(!cfg.WriteNoLocation)
-	enc.SetSort(true)
 
 	return &potEncoder{cfg: cfg, w: enc}
 }
