@@ -57,7 +57,7 @@ Download a [pre-built binary from the releases](https://github.com/vorlif/xsprea
 source:
 
 ```bash
-go install github.com/vorlif/xspreak@v0.9.0
+go install github.com/vorlif/xspreak@latest
 ```
 
 Tests installation with:
