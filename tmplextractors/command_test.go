@@ -146,3 +146,42 @@ func TestComplex(t *testing.T) {
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)
 }
+
+func TestParenthesised(t *testing.T) {
+	cfg := config.NewDefault()
+	cfg.SourceDir = testdataDir
+	cfg.ExtractErrors = false
+	cfg.Keywords = []*tmpl.Keyword{
+		{
+			Name:        ".X",
+			SingularPos: 0,
+			PluralPos:   -1,
+			ContextPos:  -1,
+			DomainPos:   -1,
+		},
+	}
+	cfg.TemplatePatterns = []string{
+		testdataTemplates + "/**/seven.parens",
+	}
+
+	require.NoError(t, cfg.Prepare())
+
+	ctx := context.Background()
+	contextLoader := extract.NewContextLoader(cfg)
+
+	extractCtx, err := contextLoader.Load(ctx)
+	require.NoError(t, err)
+
+	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
+	require.NoError(t, err)
+
+	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{NewCommandExtractor()})
+	require.NoError(t, err)
+
+	want := []string{
+		"foo",
+		"bar",
+	}
+	got := collectIssueStrings(issues)
+	assert.ElementsMatch(t, want, got)
+}

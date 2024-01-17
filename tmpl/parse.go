@@ -1,12 +1,12 @@
 package tmpl
 
 import (
+	"bufio"
 	"bytes"
 	"go/token"
 	"io"
 	"os"
 	"strings"
-	"text/scanner"
 	"text/template/parse"
 )
 
@@ -71,24 +71,14 @@ func extractLineInfos(filename string, src io.Reader) []token.Position {
 	infos := make([]token.Position, 0, 50)
 	infos = append(infos, token.Position{Filename: filename, Offset: 0, Line: 1, Column: 1})
 
-	var s scanner.Scanner
-	s.Filename = filename
-	s.Init(src)
-	s.Whitespace ^= 1<<'\t' | 1<<'\n'
-	s.Mode ^= scanner.SkipComments
-
-	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
-		switch tok {
-		case '\n':
-			p := s.Pos()
-			tokPos := token.Position{
-				Filename: p.Filename,
-				Offset:   p.Offset,
-				Line:     p.Line,
-				Column:   p.Column,
-			}
-			infos = append(infos, tokPos)
-		}
+	scanner := bufio.NewScanner(src)
+	offset := 0
+	line := 1
+	for scanner.Scan() {
+		offset += len(scanner.Text())
+		infos = append(infos, token.Position{Filename: filename, Offset: offset, Line: line, Column: len(scanner.Text())})
+		offset++
+		line++
 	}
 
 	return infos
