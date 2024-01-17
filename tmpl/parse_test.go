@@ -45,7 +45,7 @@ func TestParseHtml(t *testing.T) {
 		panic(err)
 	}
 
-	res, err := ParseBytes("test", []byte(text))
+	res, err := ParseBytes("test", text)
 	assert.NoError(t, err)
 	require.NotNil(t, res)
 }
