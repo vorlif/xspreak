@@ -1,6 +1,7 @@
 package tmpl
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -36,4 +37,15 @@ multiline */}}
 	assert.Len(t, res.Comments, 0)
 	res.ExtractComments()
 	assert.Len(t, res.Comments, 3)
+}
+
+func TestParseHtml(t *testing.T) {
+	text, err := os.ReadFile("../testdata/tmpl/five.tmpl")
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := ParseBytes("test", []byte(text))
+	assert.NoError(t, err)
+	require.NotNil(t, res)
 }
