@@ -20,6 +20,10 @@ func GenericFunc[V int64 | float64](log alias.Singular, i V) V {
 	return i
 }
 
+type methodStruct struct{}
+
+func (methodStruct) Method(alias.Singular) {}
+
 func outerFuncDef() {
 	f := func(msgid alias.Singular, plural alias.Plural, context alias.Context, domain alias.Domain) {}
 
@@ -76,4 +80,8 @@ func builtInFunctions() {
 	t.NPGetf("context-np", "msgid-np", "pluralid-np", 10)
 	t.DPGetf("domain-dp", "context-dp", "singular-dp")
 	t.DNPGetf("domain-dnp", "context-dnp", "msgid-dnp", "pluralid-dnp", 10)
+}
+
+func methodCall() {
+	(methodStruct{}).Method("struct-method-call")
 }
