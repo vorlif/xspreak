@@ -18,6 +18,8 @@ func TestStructDefExtractor(t *testing.T) {
 		"struct msgid arr2", "struct plural arr2",
 		"A3", "B3", "C3",
 		"A4", "B4", "C4",
+		"GA3", "GB3", "GC3",
+		"GA4", "GB4", "GC4",
 	}
 	assert.ElementsMatch(t, want, got)
 }

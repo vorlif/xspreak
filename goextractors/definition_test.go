@@ -36,6 +36,16 @@ func TestDefinitionExtractor(t *testing.T) {
 		assert.Contains(t, defs[key], "Test")
 	}
 
+	key = "github.com/vorlif/testdata.methodStruct.Method"
+	if assert.Contains(t, defs, key) {
+		assert.Contains(t, defs[key], "0")
+	}
+
+	key = "github.com/vorlif/testdata.genericMethodStruct.Method"
+	if assert.Contains(t, defs, key) {
+		assert.Contains(t, defs[key], "0")
+	}
+
 	key = "github.com/vorlif/testdata.noop"
 	if assert.Contains(t, defs, key) {
 		assert.Contains(t, defs[key], "sing")

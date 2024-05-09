@@ -32,7 +32,7 @@ func TestFuncCallExtractor(t *testing.T) {
 
 		"constCtxMsg", "constCtxVal",
 
-		"struct-method-call",
+		"struct-method-call", "generic-struct-method-call",
 	}
 	got := collectIssueStrings(issues)
 	assert.ElementsMatch(t, want, got)

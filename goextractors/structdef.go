@@ -35,20 +35,23 @@ func (v structDefExtractor) Run(_ context.Context, extractCtx *extractors.Contex
 			return
 		}
 
-		var obj types.Object
-		var pkg *packages.Package
+		var ident *ast.Ident
 		switch val := node.Type.(type) {
 		case *ast.SelectorExpr:
-			pkg, obj = extractCtx.GetType(val.Sel)
-			if pkg == nil {
-				return
-			}
+			ident = val.Sel
 		case *ast.Ident:
-			pkg, obj = extractCtx.GetType(val)
-			if pkg == nil {
-				return
+			ident = val
+		case *ast.IndexExpr:
+			switch x := val.X.(type) {
+			case *ast.Ident:
+				ident = x
 			}
 		default:
+			return
+		}
+
+		pkg, obj := extractCtx.GetType(ident)
+		if pkg == nil {
 			return
 		}
 

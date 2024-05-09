@@ -24,6 +24,10 @@ type methodStruct struct{}
 
 func (methodStruct) Method(alias.Singular) {}
 
+type genericMethodStruct[T any] struct{}
+
+func (genericMethodStruct[T]) Method(alias.Singular) {}
+
 func outerFuncDef() {
 	f := func(msgid alias.Singular, plural alias.Plural, context alias.Context, domain alias.Domain) {}
 
@@ -84,4 +88,5 @@ func builtInFunctions() {
 
 func methodCall() {
 	(methodStruct{}).Method("struct-method-call")
+	(genericMethodStruct[string]{}).Method("generic-struct-method-call")
 }
