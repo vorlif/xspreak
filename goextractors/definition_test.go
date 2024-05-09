@@ -30,12 +30,13 @@ func TestDefinitionExtractor(t *testing.T) {
 	assert.Empty(t, issues)
 
 	defs := extractCtx.Definitions
+
 	key := "github.com/vorlif/testdata.M"
 	if assert.Contains(t, defs, key) {
 		assert.Contains(t, defs[key], "Test")
 	}
 
-	key = "github.com/vorlif/testdata.func github.com/vorlif/testdata.noop(sing string, plural string, context string, domain string)"
+	key = "github.com/vorlif/testdata.noop"
 	if assert.Contains(t, defs, key) {
 		assert.Contains(t, defs[key], "sing")
 		assert.Contains(t, defs[key], "plural")
@@ -43,19 +44,19 @@ func TestDefinitionExtractor(t *testing.T) {
 		assert.Contains(t, defs[key], "domain")
 	}
 
-	key = "github.com/vorlif/testdata.func github.com/vorlif/testdata.multiNamesFunc(a string, b string)"
+	key = "github.com/vorlif/testdata.multiNamesFunc"
 	if assert.Contains(t, defs, key) {
 		assert.Contains(t, defs[key], "a")
 		assert.Contains(t, defs[key], "b")
 	}
 
-	key = "github.com/vorlif/testdata.func github.com/vorlif/testdata.noParamNames(string, string)"
+	key = "github.com/vorlif/testdata.noParamNames"
 	if assert.Contains(t, defs, key) {
 		assert.Contains(t, defs[key], "0")
 		assert.Contains(t, defs[key], "1")
 	}
 
-	key = "github.com/vorlif/testdata.func github.com/vorlif/testdata.variadicFunc(a string, vars ...string)"
+	key = "github.com/vorlif/testdata.variadicFunc"
 	if assert.Contains(t, defs, key) {
 		if assert.Contains(t, defs[key], "a") {
 			assert.Equal(t, 0, defs[key]["a"].FieldPos)
