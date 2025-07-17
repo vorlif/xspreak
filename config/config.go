@@ -42,6 +42,8 @@ type Config struct {
 	MaxDepth int
 	Args     []string
 
+	LoadedPackages []string
+
 	Timeout time.Duration
 
 	ExtractFormat     string
