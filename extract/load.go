@@ -73,6 +73,15 @@ func (cl *ContextLoader) Load(ctx context.Context) (*extractors.Context, error) 
 		return nil, fmt.Errorf("failed to load packages: %w", err)
 	}
 
+	// Add loaded packages from config to originalPkgs
+	if len(cl.config.LoadedPackages) > 0 {
+		loadedPkgs, err := loadPackagesFromDir(pkgConf, cl.config.LoadedPackages)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load specified packages: %w", err)
+		}
+		originalPkgs = append(originalPkgs, loadedPkgs...)
+	}
+
 	if len(originalPkgs) == 0 {
 		return nil, errors.New("no go files to analyze")
 	}

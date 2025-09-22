@@ -62,6 +62,7 @@ func init() {
 	fs.StringVar(&extractCfg.CopyrightHolder, "copyright-holder", def.CopyrightHolder, "Set copyright holder in output")
 	fs.StringVar(&extractCfg.PackageName, "package-name", def.PackageName, "Set package name in output")
 	fs.StringVar(&extractCfg.BugsAddress, "msgid-bugs-address", def.BugsAddress, "Set report address for msgid bugs")
+	fs.StringSliceVarP(&extractCfg.LoadedPackages, "loaded-packages", "l", []string{}, "List of packages divided by comma to search for translations")
 }
 
 func initVersionNumber() {
