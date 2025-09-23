@@ -14,9 +14,7 @@ const (
 	templateMarkerShort = "tmpl"
 )
 
-var (
-	reRange = regexp.MustCompile(`^range:\s+\d+\.\.\d+\s*$`)
-)
+var reRange = regexp.MustCompile(`^range:\s+\d+\.\.\d+\s*$`)
 
 func IsInlineTemplate(comment string) bool {
 	for _, line := range strings.Split(comment, "\n") {

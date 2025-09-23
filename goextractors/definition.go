@@ -140,17 +140,21 @@ func (de *definitionExtractorRunner) extractStruct(decl *ast.GenDecl) {
 					tok = de.extractCtx.GetLocalizeTypeToken(field.Type)
 					break
 				}
-				if selector := searchSelector(field.Type); selector == nil {
+
+				selector := searchSelector(field.Type)
+				if selector == nil {
 					continue
-				} else {
-					tok = de.extractCtx.GetLocalizeTypeToken(selector)
 				}
+
+				tok = de.extractCtx.GetLocalizeTypeToken(selector)
+
 			default:
-				if selector := searchSelector(field.Type); selector == nil {
+				selector := searchSelector(field.Type)
+				if selector == nil {
 					continue
-				} else {
-					tok = de.extractCtx.GetLocalizeTypeToken(selector)
 				}
+
+				tok = de.extractCtx.GetLocalizeTypeToken(selector)
 			}
 
 			if tok == etype.None {

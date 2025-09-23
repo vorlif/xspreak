@@ -225,7 +225,7 @@ func (c *Context) SearchStrings(startExpr ast.Expr) []*SearchResult {
 		return results
 	}
 
-	c.Inspector.WithStack([]ast.Node{&ast.AssignStmt{}}, func(raw ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	c.Inspector.WithStack([]ast.Node{&ast.AssignStmt{}}, func(raw ast.Node, _ bool, _ []ast.Node) (proceed bool) {
 		proceed = false
 
 		node := raw.(*ast.AssignStmt)
@@ -275,7 +275,7 @@ func (c *Context) GetComments(pkg *packages.Package, nodes ...ast.Node) []string
 			break
 		}
 
-		c.Inspector.WithStack([]ast.Node{node}, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
+		c.Inspector.WithStack([]ast.Node{node}, func(n ast.Node, _ bool, stack []ast.Node) (proceed bool) {
 			proceed = false
 			// Search stack for our node
 			if n != node {

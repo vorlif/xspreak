@@ -85,7 +85,7 @@ func extractLineInfos(filename string, src io.Reader) []token.Position {
 }
 
 func (t *Template) ExtractComments() {
-	t.Inspector.Nodes([]parse.Node{&parse.CommentNode{}}, func(rawNode parse.Node, push bool) (proceed bool) {
+	t.Inspector.Nodes([]parse.Node{&parse.CommentNode{}}, func(rawNode parse.Node, _ bool) (proceed bool) {
 		proceed = false
 		node := rawNode.(*parse.CommentNode)
 

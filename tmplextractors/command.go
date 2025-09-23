@@ -32,7 +32,7 @@ func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context
 	for _, template := range extractCtx.Templates {
 		template.ExtractComments()
 
-		template.Inspector.WithStack([]parse.Node{&parse.PipeNode{}}, func(n parse.Node, push bool, stack []parse.Node) (proceed bool) {
+		template.Inspector.WithStack([]parse.Node{&parse.PipeNode{}}, func(n parse.Node, push bool, _ []parse.Node) (proceed bool) {
 			proceed = false
 			if !push {
 				return

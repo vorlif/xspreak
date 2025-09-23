@@ -34,7 +34,7 @@ func (u unprintableChecker) Name() string { return "unprintable check" }
 
 func checkForUnprintableChars(s string, pos token.Position) {
 	for _, r := range s {
-		if !(unicode.IsPrint(r) || unicode.IsSpace(r)) {
+		if !unicode.IsPrint(r) && !unicode.IsSpace(r) {
 			filename := pos.Filename
 			if relPath, err := filepath.Rel(workingDir, filename); err == nil {
 				filename = relPath

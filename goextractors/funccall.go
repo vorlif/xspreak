@@ -13,9 +13,7 @@ import (
 
 type funcCallExtractor struct{}
 
-func NewFuncCallExtractor() extractors.Extractor {
-	return &funcCallExtractor{}
-}
+func NewFuncCallExtractor() extractors.Extractor { return &funcCallExtractor{} }
 
 func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
 	util.TrackTime(time.Now(), "extract func calls")
@@ -84,7 +82,7 @@ func (v funcCallExtractor) Run(_ context.Context, extractCtx *extractors.Context
 		// Function calls
 		for _, def := range funcParameterDefs {
 			for i, arg := range node.Args {
-				if (def.FieldPos != i) && !(i >= def.FieldPos && def.IsVariadic) {
+				if (def.FieldPos != i) && (i < def.FieldPos || !def.IsVariadic) {
 					continue
 				}
 

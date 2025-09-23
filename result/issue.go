@@ -10,8 +10,10 @@ import (
 )
 
 type Issue struct {
+	// FromExtractor is the name of the extractor that found this issue.
 	FromExtractor string
-	IDToken       etype.Token
+
+	IDToken etype.Token
 
 	Domain   string
 	Context  string
@@ -26,18 +28,7 @@ type Issue struct {
 	Pos token.Position
 }
 
-func (i *Issue) FilePath() string {
-	return i.Pos.Filename
-}
-
-func (i *Issue) Line() int {
-	return i.Pos.Line
-}
-
-func (i *Issue) Column() int {
-	return i.Pos.Column
-}
-
-func (i *Issue) Description() string {
-	return fmt.Sprintf("%s: %s", i.FromExtractor, i.MsgID)
-}
+func (i *Issue) FilePath() string    { return i.Pos.Filename }
+func (i *Issue) Line() int           { return i.Pos.Line }
+func (i *Issue) Column() int         { return i.Pos.Column }
+func (i *Issue) Description() string { return fmt.Sprintf("%s: %s", i.FromExtractor, i.MsgID) }

@@ -10,9 +10,9 @@ import (
 
 type prepareKey struct{}
 
-func NewPrepareKey() Processor {
-	return &prepareKey{}
-}
+func NewPrepareKey() Processor { return &prepareKey{} }
+
+func (p prepareKey) Name() string { return "prepare-key" }
 
 func (p prepareKey) Process(inIssues []result.Issue) ([]result.Issue, error) {
 	util.TrackTime(time.Now(), "Prepare key")
@@ -25,8 +25,4 @@ func (p prepareKey) Process(inIssues []result.Issue) ([]result.Issue, error) {
 		outIssues = append(outIssues, iss)
 	}
 	return outIssues, nil
-}
-
-func (p prepareKey) Name() string {
-	return "prepare_key"
 }

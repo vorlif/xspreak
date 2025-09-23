@@ -98,11 +98,10 @@ func (c *Config) Prepare() error {
 		c.SourceDir = c.CurrentDir
 	}
 
-	//nolint:revive
-	if absP, err := filepath.Abs(c.SourceDir); err != nil {
+	var err error
+	c.SourceDir, err = filepath.Abs(c.SourceDir)
+	if err != nil {
 		return err
-	} else {
-		c.SourceDir = absP
 	}
 
 	if c.OutputFile != "" {
@@ -112,11 +111,9 @@ func (c *Config) Prepare() error {
 		c.OutputFile = c.DefaultDomain + "." + c.ExtractFormat
 	}
 
-	//nolint:revive
-	if absP, err := filepath.Abs(c.OutputDir); err != nil {
+	c.OutputDir, err = filepath.Abs(c.OutputDir)
+	if err != nil {
 		return err
-	} else {
-		c.OutputDir = absP
 	}
 
 	if c.DontWrap {

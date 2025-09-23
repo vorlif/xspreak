@@ -21,7 +21,7 @@ func (e *funcReturnExtractor) Run(_ context.Context, extractCtx *extractors.Cont
 	util.TrackTime(time.Now(), "extract func return values")
 	var issues []result.Issue
 
-	extractCtx.Inspector.WithStack([]ast.Node{&ast.FuncDecl{}}, func(rawNode ast.Node, push bool, stack []ast.Node) (proceed bool) {
+	extractCtx.Inspector.WithStack([]ast.Node{&ast.FuncDecl{}}, func(rawNode ast.Node, push bool, _ []ast.Node) (proceed bool) {
 		proceed = true
 		if !push {
 			return

@@ -43,7 +43,7 @@ func (v errorExtractor) Run(_ context.Context, extractCtx *extractors.Context) (
 			return
 		}
 
-		if "errors" != obj.Pkg().Path() || !config.ShouldExtractPackage(pkg.PkgPath) {
+		if obj.Pkg().Path() != "errors" || !config.ShouldExtractPackage(pkg.PkgPath) {
 			return
 		}
 
