@@ -43,13 +43,11 @@ func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context
 			}
 
 			for _, cmd := range pipe.Cmds {
-				iss := extractIssue(cmd, extractCtx, template)
-				if iss == nil {
-					continue
+				isses := extractIssues(cmd, extractCtx, template)
+				for _, iss := range isses {
+					iss.Flags = append(iss.Flags, "go-template")
+					issues = append(issues, iss)
 				}
-
-				iss.Flags = append(iss.Flags, "go-template")
-				issues = append(issues, *iss)
 			}
 
 			return
@@ -60,6 +58,29 @@ func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context
 
 func (c *commandExtractor) Name() string {
 	return "tmpl_command"
+}
+
+func walkNode(n parse.Node, extractCtx *extractors.Context, template *tmpl.Template, results *[]result.Issue) {
+	switch v := n.(type) {
+	case *parse.CommandNode:
+		iss := extractIssue(v, extractCtx, template)
+		if iss != nil {
+			*results = append(*results, *iss)
+		}
+		for _, node := range v.Args {
+			walkNode(node, extractCtx, template, results)
+		}
+	case *parse.PipeNode:
+		for _, node := range v.Cmds {
+			walkNode(node, extractCtx, template, results)
+		}
+	}
+}
+
+func extractIssues(cmd *parse.CommandNode, extractCtx *extractors.Context, template *tmpl.Template) []result.Issue {
+	ret := []result.Issue{}
+	walkNode(cmd, extractCtx, template, &ret)
+	return ret
 }
 
 func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context, template *tmpl.Template) *result.Issue {
