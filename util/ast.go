@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"go/ast"
 	"go/types"
 	"strings"
 )
@@ -26,4 +27,28 @@ func ObjToKey(obj types.Object) string {
 	default:
 		return fmt.Sprintf("%s.%s", obj.Pkg().Path(), obj.Name())
 	}
+}
+
+func SearchSelector(expr any) *ast.SelectorExpr {
+	current := expr
+	for current != nil {
+		switch v := current.(type) {
+		case *ast.SelectorExpr:
+			return v
+		case *ast.Ident:
+			if v.Obj == nil {
+				return nil
+			}
+			current = v.Obj.Decl
+		case *ast.ValueSpec:
+			current = v.Type
+		case *ast.Field:
+			current = v.Type
+		case *ast.Ellipsis:
+			current = v.Elt
+		default:
+			return nil
+		}
+	}
+	return nil
 }

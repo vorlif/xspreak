@@ -14,15 +14,6 @@ func IsValidSpreakPackage(pkg string) bool {
 		strings.HasPrefix(pkg, XSpreakPackagePath)
 }
 
-func ShouldScanPackage(pkg string) bool {
-	if ShouldScanStruct(pkg) {
-		return true
-	}
-
-	// We need the definitions of the localizer and locale methods.
-	return pkg == SpreakPackagePath
-}
-
 func ShouldScanStruct(pkg string) bool {
 	if !strings.HasPrefix(pkg, SpreakPackagePath) {
 		return true

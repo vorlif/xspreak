@@ -3,12 +3,14 @@ package encoder
 import (
 	"regexp"
 
-	"github.com/vorlif/xspreak/result"
+	"github.com/vorlif/xspreak/extract"
 )
 
-// Recognizes not all cases, but most. - See Unit tests.
+// Regexp that matches if the string contains a string formatting verb
+// like %s, %d, %f, etc.
+// Recognizes not all cases but most. - See Unit tests.
 var reGoStringFormat = regexp.MustCompile(`%([#+\-*0.])?(\[\d])?(([1-9])\.([1-9])|([1-9])|([1-9])\.|\.([1-9]))?[xsvTtbcdoOqXUeEfFgGp]`)
 
 type Encoder interface {
-	Encode(issues []result.Issue) error
+	Encode(issues []extract.Issue) error
 }

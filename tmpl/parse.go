@@ -25,7 +25,7 @@ type Template struct {
 	Comments map[int][]string
 }
 
-func Parse(filepath string) (*Template, error) {
+func ParseFile(filepath string) (*Template, error) {
 	src, errF := os.ReadFile(filepath)
 	if errF != nil {
 		return nil, errF

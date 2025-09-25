@@ -8,22 +8,21 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/vorlif/xspreak/extract/extractors"
-	"github.com/vorlif/xspreak/result"
+	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/tmpl"
 	"github.com/vorlif/xspreak/util"
 )
 
 type commandExtractor struct{}
 
-func NewCommandExtractor() extractors.Extractor {
+func NewCommandExtractor() extract.Extractor {
 	return &commandExtractor{}
 }
 
-func (c *commandExtractor) Run(_ context.Context, extractCtx *extractors.Context) ([]result.Issue, error) {
+func (c *commandExtractor) Run(_ context.Context, extractCtx *extract.Context) ([]extract.Issue, error) {
 	util.TrackTime(time.Now(), "extract templates")
 
-	var issues []result.Issue
+	var issues []extract.Issue
 	if len(extractCtx.Config.Keywords) == 0 {
 		log.Debug("Skip template extraction, no keywords present")
 		return issues, nil
@@ -60,7 +59,7 @@ func (c *commandExtractor) Name() string {
 	return "tmpl_command"
 }
 
-func walkNode(n parse.Node, extractCtx *extractors.Context, template *tmpl.Template, results *[]result.Issue) {
+func walkNode(n parse.Node, extractCtx *extract.Context, template *tmpl.Template, results *[]extract.Issue) {
 	switch v := n.(type) {
 	case *parse.CommandNode:
 		iss := extractIssue(v, extractCtx, template)
@@ -77,13 +76,13 @@ func walkNode(n parse.Node, extractCtx *extractors.Context, template *tmpl.Templ
 	}
 }
 
-func extractIssues(cmd *parse.CommandNode, extractCtx *extractors.Context, template *tmpl.Template) []result.Issue {
-	ret := []result.Issue{}
+func extractIssues(cmd *parse.CommandNode, extractCtx *extract.Context, template *tmpl.Template) []extract.Issue {
+	var ret []extract.Issue
 	walkNode(cmd, extractCtx, template, &ret)
 	return ret
 }
 
-func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context, template *tmpl.Template) *result.Issue {
+func extractIssue(cmd *parse.CommandNode, extractCtx *extract.Context, template *tmpl.Template) *extract.Issue {
 	if cmd == nil {
 		return nil
 	}
@@ -104,8 +103,8 @@ func extractIssue(cmd *parse.CommandNode, extractCtx *extractors.Context, templa
 	return nil
 }
 
-func extractArgs(args []parse.Node, keyword *tmpl.Keyword, template *tmpl.Template) *result.Issue {
-	iss := &result.Issue{}
+func extractArgs(args []parse.Node, keyword *tmpl.Keyword, template *tmpl.Template) *extract.Issue {
+	iss := &extract.Issue{}
 
 	if stringNode, ok := args[keyword.SingularPos].(*parse.StringNode); ok {
 		iss.MsgID = stringNode.Text

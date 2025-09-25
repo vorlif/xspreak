@@ -11,8 +11,8 @@ import (
 
 	"github.com/vorlif/spreak/catalog/cldrplural"
 
+	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/extract/etype"
-	"github.com/vorlif/xspreak/result"
 	"github.com/vorlif/xspreak/util"
 )
 
@@ -27,7 +27,7 @@ func NewJSONEncoder(w io.Writer, ident string) Encoder {
 	return &jsonEncoder{w: enc}
 }
 
-func (e *jsonEncoder) Encode(issues []result.Issue) error {
+func (e *jsonEncoder) Encode(issues []extract.Issue) error {
 	util.TrackTime(time.Now(), "Build messages")
 
 	items := make(map[string]JSONItem, len(issues))

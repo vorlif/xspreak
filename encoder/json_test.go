@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/extract/etype"
-	"github.com/vorlif/xspreak/result"
 )
 
 func TestJSONEncoder(t *testing.T) {
@@ -19,8 +19,8 @@ func TestJSONEncoder(t *testing.T) {
 	t.Run("key contains context", func(t *testing.T) {
 		buf.Reset()
 
-		iss := result.Issue{Context: "ctx", MsgID: "id"}
-		err := enc.Encode([]result.Issue{iss})
+		iss := extract.Issue{Context: "ctx", MsgID: "id"}
+		err := enc.Encode([]extract.Issue{iss})
 		require.NoError(t, err)
 
 		want := `{"id_ctx":{"context":"ctx","other":"id"}}
@@ -31,7 +31,7 @@ func TestJSONEncoder(t *testing.T) {
 	t.Run("by key type text is removed", func(t *testing.T) {
 		buf.Reset()
 
-		err := enc.Encode([]result.Issue{
+		err := enc.Encode([]extract.Issue{
 			{MsgID: "s.id", IDToken: etype.Key},
 			{MsgID: "p.id", PluralID: "p.id", IDToken: etype.PluralKey},
 			{Context: "ctx", MsgID: "sc.id", IDToken: etype.Key},

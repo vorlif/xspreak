@@ -1,10 +1,14 @@
-package tmplextractors
+package extractors
 
 import (
 	"context"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vorlif/xspreak/config"
@@ -13,23 +17,22 @@ import (
 	"github.com/vorlif/xspreak/extract/runner"
 )
 
-var (
-	testdataDir       = filepath.FromSlash("../testdata/project")
-	testdataTemplates = filepath.FromSlash("../testdata/tmpl")
-)
+const testdataDir = "../../testdata/project"
+
+func TestPrintAst(t *testing.T) {
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err := parser.ParseFile(fset, filepath.Join(testdataDir, "funccall.go"), nil, 0)
+	require.NoError(t, err)
+
+	err = ast.Print(fset, f)
+	assert.NoError(t, err)
+}
 
 func runExtraction(t *testing.T, dir string, testExtractors ...extract.Extractor) []extract.Issue {
 	cfg := config.NewDefault()
 	cfg.SourceDir = dir
-	cfg.ExtractErrors = false
-	cfg.TemplatePatterns = []string{
-		testdataTemplates + "/**/*.txt",
-		testdataTemplates + "/**/*.html",
-		testdataTemplates + "/**/*.tmpl",
-	}
-
+	cfg.ExtractErrors = true
 	require.NoError(t, cfg.Prepare())
-
 	ctx := context.Background()
 	contextLoader := loader.NewPackageLoader(cfg)
 
@@ -39,7 +42,11 @@ func runExtraction(t *testing.T, dir string, testExtractors ...extract.Extractor
 	runner, err := runner.New(cfg, extractCtx.Packages)
 	require.NoError(t, err)
 
-	issues, err := runner.Run(ctx, extractCtx, testExtractors)
+	var e []extract.Extractor
+	if len(testExtractors) > 0 {
+		e = append(e, testExtractors...)
+	}
+	issues, err := runner.Run(ctx, extractCtx, e)
 	require.NoError(t, err)
 	return issues
 }

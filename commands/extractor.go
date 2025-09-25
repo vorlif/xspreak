@@ -13,8 +13,8 @@ import (
 	"github.com/vorlif/xspreak/encoder"
 	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/extract/extractors"
-	"github.com/vorlif/xspreak/goextractors"
-	"github.com/vorlif/xspreak/result"
+	"github.com/vorlif/xspreak/extract/loader"
+	"github.com/vorlif/xspreak/extract/runner"
 	"github.com/vorlif/xspreak/tmplextractors"
 	"github.com/vorlif/xspreak/util"
 )
@@ -23,14 +23,14 @@ type Extractor struct {
 	cfg *config.Config
 	log *log.Entry
 
-	contextLoader *extract.ContextLoader
+	contextLoader *loader.PackageLoader
 }
 
 func NewExtractor() *Extractor {
 	return &Extractor{
 		cfg:           extractCfg,
 		log:           log.WithField("service", "extractor"),
-		contextLoader: extract.NewContextLoader(extractCfg),
+		contextLoader: loader.NewPackageLoader(extractCfg),
 	}
 }
 
@@ -43,11 +43,11 @@ func (e *Extractor) extract() {
 		e.log.Fatalf("Running error: %s", errE)
 	}
 
-	domainIssues := make(map[string][]result.Issue)
+	domainIssues := make(map[string][]extract.Issue)
 	start := time.Now()
 	for _, iss := range extractedIssues {
 		if _, ok := domainIssues[iss.Domain]; !ok {
-			domainIssues[iss.Domain] = []result.Issue{iss}
+			domainIssues[iss.Domain] = []extract.Issue{iss}
 		} else {
 			domainIssues[iss.Domain] = append(domainIssues[iss.Domain], iss)
 		}
@@ -55,27 +55,25 @@ func (e *Extractor) extract() {
 	log.Debugf("sort extractions took %s", time.Since(start))
 
 	if len(extractedIssues) == 0 {
-		domainIssues[""] = make([]result.Issue, 0)
+		domainIssues[""] = make([]extract.Issue, 0)
 		log.Println("No Strings found")
 	}
 
 	e.saveDomains(domainIssues)
 }
 
-func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
+func (e *Extractor) runExtraction(ctx context.Context) ([]extract.Issue, error) {
 	util.TrackTime(time.Now(), "run all extractors")
-	extractorsToRun := []extractors.Extractor{
-		goextractors.NewDefinitionExtractor(),
-		goextractors.NewCommentsExtractor(),
-		goextractors.NewFuncCallExtractor(),
-		goextractors.NewFuncReturnExtractor(),
-		goextractors.NewGlobalAssignExtractor(),
-		goextractors.NewSliceDefExtractor(),
-		goextractors.NewMapsDefExtractor(),
-		goextractors.NewStructDefExtractor(),
-		goextractors.NewVariablesExtractor(),
-		goextractors.NewErrorExtractor(),
-		goextractors.NewInlineTemplateExtractor(),
+	extractorsToRun := []extract.Extractor{
+		extractors.NewFuncCallExtractor(),
+		extractors.NewFuncReturnExtractor(),
+		extractors.NewGlobalAssignExtractor(),
+		extractors.NewSliceDefExtractor(),
+		extractors.NewMapsDefExtractor(),
+		extractors.NewStructDefExtractor(),
+		extractors.NewVariablesExtractor(),
+		extractors.NewErrorExtractor(),
+		extractors.NewInlineTemplateExtractor(),
 		tmplextractors.NewCommandExtractor(),
 	}
 
@@ -84,7 +82,7 @@ func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
 		return nil, fmt.Errorf("context loading failed: %w", err)
 	}
 
-	runner, err := extract.NewRunner(e.cfg, extractCtx.Packages)
+	runner, err := runner.New(e.cfg, extractCtx.Packages)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +95,7 @@ func (e *Extractor) runExtraction(ctx context.Context) ([]result.Issue, error) {
 	return issues, nil
 }
 
-func (e *Extractor) saveDomains(domains map[string][]result.Issue) {
+func (e *Extractor) saveDomains(domains map[string][]extract.Issue) {
 	util.TrackTime(time.Now(), "save files")
 	for domainName, issues := range domains {
 		var outputFile string

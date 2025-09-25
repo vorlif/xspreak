@@ -9,7 +9,8 @@ import (
 
 	"github.com/vorlif/xspreak/config"
 	"github.com/vorlif/xspreak/extract"
-	"github.com/vorlif/xspreak/extract/extractors"
+	"github.com/vorlif/xspreak/extract/loader"
+	"github.com/vorlif/xspreak/extract/runner"
 	"github.com/vorlif/xspreak/tmpl"
 )
 
@@ -75,15 +76,15 @@ func TestKeyword(t *testing.T) {
 	require.NoError(t, cfg.Prepare())
 
 	ctx := context.Background()
-	contextLoader := extract.NewContextLoader(cfg)
+	contextLoader := loader.NewPackageLoader(cfg)
 
 	extractCtx, err := contextLoader.Load(ctx)
 	require.NoError(t, err)
 
-	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
+	runner, err := runner.New(cfg, extractCtx.Packages)
 	require.NoError(t, err)
 
-	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{NewCommandExtractor()})
+	issues, err := runner.Run(ctx, extractCtx, []extract.Extractor{NewCommandExtractor()})
 	require.NoError(t, err)
 
 	want := []string{
@@ -128,15 +129,15 @@ func TestComplex(t *testing.T) {
 	require.NoError(t, cfg.Prepare())
 
 	ctx := context.Background()
-	contextLoader := extract.NewContextLoader(cfg)
+	contextLoader := loader.NewPackageLoader(cfg)
 
 	extractCtx, err := contextLoader.Load(ctx)
 	require.NoError(t, err)
 
-	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
+	runner, err := runner.New(cfg, extractCtx.Packages)
 	require.NoError(t, err)
 
-	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{NewCommandExtractor()})
+	issues, err := runner.Run(ctx, extractCtx, []extract.Extractor{NewCommandExtractor()})
 	require.NoError(t, err)
 
 	want := []string{
@@ -167,15 +168,15 @@ func TestParenthesised(t *testing.T) {
 	require.NoError(t, cfg.Prepare())
 
 	ctx := context.Background()
-	contextLoader := extract.NewContextLoader(cfg)
+	contextLoader := loader.NewPackageLoader(cfg)
 
 	extractCtx, err := contextLoader.Load(ctx)
 	require.NoError(t, err)
 
-	runner, err := extract.NewRunner(cfg, extractCtx.Packages)
+	runner, err := runner.New(cfg, extractCtx.Packages)
 	require.NoError(t, err)
 
-	issues, err := runner.Run(ctx, extractCtx, []extractors.Extractor{NewCommandExtractor()})
+	issues, err := runner.Run(ctx, extractCtx, []extract.Extractor{NewCommandExtractor()})
 	require.NoError(t, err)
 
 	want := []string{

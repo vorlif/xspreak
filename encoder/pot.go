@@ -12,7 +12,7 @@ import (
 	"github.com/vorlif/spreak/catalog/po"
 
 	"github.com/vorlif/xspreak/config"
-	"github.com/vorlif/xspreak/result"
+	"github.com/vorlif/xspreak/extract"
 	"github.com/vorlif/xspreak/util"
 )
 
@@ -30,7 +30,7 @@ func NewPotEncoder(cfg *config.Config, w io.Writer) Encoder {
 	return &potEncoder{cfg: cfg, w: enc}
 }
 
-func (e *potEncoder) Encode(issues []result.Issue) error {
+func (e *potEncoder) Encode(issues []extract.Issue) error {
 	file := &po.File{
 		Header:   e.buildHeader(),
 		Messages: make(map[string]map[string]*po.Message),
@@ -43,7 +43,7 @@ func (e *potEncoder) Encode(issues []result.Issue) error {
 	return e.w.Encode(file)
 }
 
-func (e *potEncoder) buildMessages(issues []result.Issue) []*po.Message {
+func (e *potEncoder) buildMessages(issues []extract.Issue) []*po.Message {
 	util.TrackTime(time.Now(), "Build messages")
 	messages := make([]*po.Message, 0, len(issues))
 

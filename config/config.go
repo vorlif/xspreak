@@ -17,11 +17,14 @@ const (
 )
 
 type Config struct {
-	IsVerbose       bool
-	CurrentDir      string
-	SourceDir       string
-	OutputDir       string
-	OutputFile      string
+	IsVerbose  bool
+	CurrentDir string
+	SourceDir  string
+	// OutputDir is the directory where the output file will be written.
+	OutputDir  string
+	OutputFile string
+	// CommentPrefixes are the prefixes that will be used to identify translator comments.
+	// For example, "TRANSLATORS:".
 	CommentPrefixes []string
 	ExtractErrors   bool
 	ErrorContext    string
@@ -39,13 +42,14 @@ type Config struct {
 	PackageName     string
 	BugsAddress     string
 
-	MaxDepth int
-	Args     []string
+	Args []string
 
 	LoadedPackages []string
 
 	Timeout time.Duration
 
+	// ExtractFormat is the format of the output file.
+	// Possible values: "po", "pot", "json"
 	ExtractFormat     string
 	TmplIsMonolingual bool
 }
@@ -70,8 +74,7 @@ func NewDefault() *Config {
 		PackageName:     "PACKAGE VERSION",
 		BugsAddress:     "",
 
-		MaxDepth: 20,
-		Timeout:  15 * time.Minute,
+		Timeout: 15 * time.Minute,
 
 		ExtractFormat: ExtractFormatPot,
 	}
@@ -108,7 +111,7 @@ func (c *Config) Prepare() error {
 		c.OutputDir = filepath.Dir(c.OutputFile)
 		c.OutputFile = filepath.Base(c.OutputFile)
 	} else {
-		c.OutputFile = c.DefaultDomain + "." + c.ExtractFormat
+		c.OutputFile = fmt.Sprintf("%s.%s", c.DefaultDomain, c.ExtractFormat)
 	}
 
 	c.OutputDir, err = filepath.Abs(c.OutputDir)
@@ -120,10 +123,12 @@ func (c *Config) Prepare() error {
 		c.WrapWidth = -1
 	}
 
-	if c.ExtractFormat == "po" {
+	switch c.ExtractFormat {
+	case "po":
 		c.ExtractFormat = ExtractFormatPot
-	}
-	if c.ExtractFormat != ExtractFormatPot && c.ExtractFormat != ExtractFormatJSON {
+	case ExtractFormatJSON, ExtractFormatPot:
+		break
+	default:
 		return fmt.Errorf("only the JSON and pot format is supported, you want %v", c.ExtractFormat)
 	}
 
